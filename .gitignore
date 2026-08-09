@@ -29,6 +29,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -40,3 +41,17 @@ next-env.d.ts
 /.sites-runtime/
 /outputs/
 /work/
+/.venv/
+/fraudlens.db
+/backend/fraudlens.db
+/data/raw/*
+!/data/raw/.gitkeep
+/data/processed/*
+!/data/processed/.gitkeep
+/data/synthetic/*
+!/data/synthetic/.gitkeep
+/artifacts/*
+!/artifacts/.gitkeep
+__pycache__/
+.pytest_cache/
+*.py[cod]

@@ -1,108 +1,144 @@
-# vinext-starter
+# FraudLens
 
-A clean full-stack starter running on
-[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
-Drizzle support.
+FraudLens is an explainable credit-card fraud strategy simulator. It goes beyond ranking transactions: it helps an analyst choose a decision threshold that balances missed fraud, false-positive customer friction, manual-review expense, and review-team capacity.
 
-## Prerequisites
+The project is designed for Credit & Fraud Risk internship interviews. Its central question is not “Which model has the highest accuracy?” but “Which decision policy minimizes financial damage while remaining explainable and operationally feasible?”
 
-- Node.js `>=22.13.0`
-- Linux with `flock`, `curl`, and GNU `timeout`
+## What is working
 
-## Sites Lifecycle
+- Interactive threshold simulator with live precision, recall, confusion matrix, fraud loss, legitimate declines, and total strategy cost
+- Adjustable decline cost, review cost, fraud recovery rate, and daily review capacity
+- Searchable transaction explorer with business-readable SHAP-style explanations
+- Logistic Regression and calibrated XGBoost comparison on the same chronological holdout set
+- Precision–recall visualization for the imbalanced fraud class
+- Six executable attack patterns: card testing, velocity burst, account takeover, impossible travel, dormant card, and merchant anomaly
+- Deterministic 75,000-row synthetic strategy generator with readable features and a 1.10% fraud rate
+- OpenML benchmark download and schema-validation path for the 284,807-row European dataset
+- FastAPI service, SQLAlchemy/SQLite schema, strategy-cost engine, and API validation
+- Frontend unit tests, backend tests, linting, and production-build verification
 
-The Sites lifecycle CLI runs the locked dependency install before returning this checkout. Edit the source under `app/`, then checkpoint when a coherent milestone is ready to inspect or share. The remote Sites builder runs `npm run build` against the pushed commit. Do not repeat install or build as a normal pre-checkpoint step.
+## Architecture
 
-This starter does not use `wrangler.jsonc`.
-
-`install:ci` is intentionally a single, non-retrying `npm ci`. It refuses a concurrent install for the same project, consumes a matching image-seeded npm cache with `--prefer-offline` while retaining registry fallback for a missing cache object, otherwise downloads and verifies the complete vinext tarball recorded in `package-lock.json`, limits npm to one socket, and terminates a stalled install. `build` applies a short timeout and then validates the Sites artifact. These helpers target Linux and use GNU `timeout`; they are not native macOS scripts.
-
-Scripts that need writable project-scoped home, npm, XDG, and temporary paths use `scripts/sites-env.sh`. The `dev` and `start` scripts honor the caller's runtime environment and keep Wrangler logs inside the checkout. The generated `.sites-runtime/` directory is disposable and ignored by Git.
-
-## Included Shape
-
-- edit site code under `app/`
-- `app/chatgpt-auth.ts` provides optional dispatch-owned ChatGPT sign-in helpers
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/index.ts` reads the D1 binding from the Cloudflare Worker environment
-- `db/schema.ts` starts intentionally empty
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
-
-## Workspace Auth Headers
-
-OpenAI workspace sites can read the current user's email from
-`oai-authenticated-user-email`.
-
-SIWC-authenticated workspace sites may also receive
-`oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty
-`name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by
-`oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
-
-Treat the full name as optional and fall back to email when it is absent:
-
-```tsx
-import { headers } from "next/headers";
-
-export default async function Home() {
-  const requestHeaders = await headers();
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
-
-  const displayName = fullName ?? email;
-  // ...
-}
+```mermaid
+flowchart TD
+    R["European benchmark\n284,807 transactions"] --> P["Python validation\nand preprocessing"]
+    S["Synthetic strategy generator\n75,000 transactions"] --> P
+    P --> DB["SQLite + SQLAlchemy"]
+    DB --> LR["Logistic Regression"]
+    DB --> XGB["Calibrated XGBoost"]
+    LR --> E["Probabilities + explanations"]
+    XGB --> E
+    E --> API["FastAPI"]
+    API --> UI["React strategy dashboard"]
 ```
 
-## Optional Dispatch-Owned ChatGPT Sign-In
+## Data design
 
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs
-optional or required ChatGPT sign-in:
+The two datasets have different jobs:
 
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send
-  anonymous visitors through Sign in with ChatGPT.
-- Use `chatGPTSignInPath(returnTo)` and `chatGPTSignOutPath(returnTo)` for
-  browser links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in
-  or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because
-  they depend on per-request identity headers.
+1. **Real benchmark data** establishes that the pipeline handles severe class imbalance and a standard fraud benchmark. The `V1`–`V28` fields are anonymized, so they are not ideal for recruiter-facing explanations.
+2. **Synthetic strategy data** is clearly labeled as simulated and includes readable fields: amount, merchant category, country, distance from home, transaction velocity, average 30-day amount, amount ratio, device status, card-present status, account age, international status, and prior declines.
 
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the
-OAuth cookies, and identity header injection. Do not implement app routes for
-those reserved paths. Routes that do not import and call the helper remain
-anonymous-compatible.
+Raw data, generated CSVs, database files, and trained model artifacts are intentionally excluded from Git. They are reproducible with the included scripts.
 
-SIWC establishes identity only; it does not prove workspace membership. Use the
-Sites hosting platform's access policy controls for workspace-wide restrictions,
-or enforce explicit server-side membership or allowlist checks.
+## Model results
 
-Use SIWC for account pages, user-specific dashboards, saved records, and write
-actions tied to the current ChatGPT user. Leave public content anonymous.
+The committed interface uses metrics produced by the reproducible synthetic pipeline—not invented 99% accuracy claims. With seed `42`, 75,000 transactions, and a 70%/15%/15% chronological split:
 
-## Diagnostic Commands
+| Model | Precision | Recall | F1 | PR-AUC | Cost-aware threshold | Test strategy cost |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Calibrated XGBoost | 51.7% | 24.2% | 33.0% | 0.249 | 0.18 | $5,746 |
+| Logistic Regression | 50.0% | 14.8% | 22.9% | 0.231 | 0.97 | $5,805 |
 
-- `npm run install:ci`: perform the one bounded lockfile install
-- `npm run dev`: start the Vite/Vinext development server
-- `npm run build`: build and validate the deployable Sites artifact
-- `npm run start`: start the built Vinext application
-- `npm test`: build, validate, and verify the rendered development-preview metadata
-- `npm run validate:artifact`: recheck an existing artifact's manifest and ESM `default.fetch` export
-- `npm run db:generate`: generate Drizzle migrations after schema changes
+The fraud prevalence is about 1.10%, so PR-AUC is intentionally emphasized over accuracy. Thresholds are selected on the validation window; the final table is measured once on the untouched test window.
 
-Use build and validation commands for targeted diagnosis after a remote failure, not as part of the normal checkpoint path.
+## Repository layout
 
-The timeout defaults can be overridden for a controlled canary with `SITES_INSTALL_TIMEOUT`, `SITES_INSTALL_KILL_AFTER`, `SITES_BUILD_TIMEOUT`, and `SITES_BUILD_KILL_AFTER`. A timeout fails the command; the helpers never retry an unchanged install or build.
+```text
+fraudlens/
+├── app/                     # React/Vinext dashboard
+├── lib/strategy.ts          # Browser strategy-cost engine
+├── backend/
+│   ├── app/
+│   │   ├── ml/              # generation, validation, training, SHAP formatting
+│   │   ├── services/        # financial decision engine
+│   │   ├── database.py      # SQLAlchemy session
+│   │   ├── models.py        # SQLite tables
+│   │   └── main.py          # FastAPI endpoints
+│   ├── tests/
+│   └── requirements.txt
+├── data/                    # raw, processed, and synthetic placeholders
+├── artifacts/               # generated joblib models and metrics
+├── scripts/                 # dataset and training commands
+├── tests/                   # frontend strategy and rendered-page tests
+├── PROJECT_STATUS.md
+└── docker-compose.yml
+```
 
-## Learn More
+## Run locally
 
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+### Dashboard
+
+```bash
+npm install
+npm run dev
+```
+
+### FastAPI and SQLite
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r backend/requirements.txt
+uvicorn backend.app.main:app --reload --port 8000
+```
+
+OpenAPI documentation is available at `http://localhost:8000/docs`.
+
+### Generate data and train models
+
+```bash
+PYTHONPATH=. python scripts/generate_synthetic.py
+PYTHONPATH=. python scripts/train_models.py
+```
+
+To download the real benchmark through OpenML data ID `1597`:
+
+```bash
+PYTHONPATH=. python scripts/download_real_dataset.py
+```
+
+The download script validates all `V1`–`V28`, `Time`, `Amount`, and binary `Class` fields before writing `data/raw/creditcard.csv`.
+
+## Test and verify
+
+```bash
+npm test
+PYTHONPATH=. pytest -q backend/tests
+npm run lint
+```
+
+Tests cover bounded probabilities, threshold monotonicity, financial cost calculations, attack responses, API validation, deterministic generation, chronological splitting, schema validation, and explanation formatting.
+
+## Cost engine
+
+```text
+missed fraud loss = false-negative dollars × (1 − recovery rate)
+false-positive cost = legitimate declines × (decline cost + friction cost)
+review cost = min(flagged transactions, review capacity) × manual review cost
+total strategy cost = missed fraud loss + false-positive cost + review cost + capacity overflow
+```
+
+This is a portfolio simulation, not a production authorization system. Synthetic transactions are labeled in the interface, explanations describe model behavior rather than causation, and no payment-card data is collected.
+
+## 60-second demo
+
+1. **0–10 seconds:** “FraudLens shows how a card company balances fraud prevention against customer friction.”
+2. **10–25 seconds:** Move the threshold from `0.80` to `0.35`; point out the change in recall, missed fraud, and legitimate declines.
+3. **25–40 seconds:** Apply the cost-minimizing threshold and compare calibrated XGBoost with Logistic Regression.
+4. **40–50 seconds:** Open transaction `FL-290874` and explain its strongest risk-increasing and risk-reducing factors.
+5. **50–60 seconds:** Run the account-takeover attack, then raise the threshold and show how a policy can miss a plausible attack.
+
+## Resume bullet
+
+**FraudLens — Explainable Fraud Strategy Simulator:** Built a full-stack fraud risk decision platform with Python, FastAPI, React, SQL, calibrated XGBoost, and Logistic Regression; developed time-based transaction pipelines, SHAP-ready explanations, and an interactive cost-optimization simulator quantifying missed-fraud loss, false-positive customer friction, and review capacity.

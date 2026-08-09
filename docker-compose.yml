@@ -1,0 +1,27 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      FRAUDLENS_DATABASE_URL: sqlite:////data/fraudlens.db
+    ports:
+      - "8000:8000"
+    volumes:
+      - fraudlens-data:/data
+
+  dashboard:
+    image: node:22-slim
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "3000:5173"
+    volumes:
+      - .:/app
+      - dashboard-node-modules:/app/node_modules
+    depends_on:
+      - api
+
+volumes:
+  fraudlens-data:
+  dashboard-node-modules:
