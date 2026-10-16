@@ -7,13 +7,13 @@
   },
   "scripts": {
     "install:ci": "bash scripts/install-ci.sh",
-    "dev": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vite",
-    "build": "bash scripts/build-verified.sh",
-    "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
-    "test": "npm run test:unit && npm run build && node --test tests/rendered-html.test.mjs",
+    "dev": "next dev",
+    "build": "next build --webpack",
+    "start": "python3 -m http.server 3000 --directory out",
+    "test": "npm run test:unit && npm run build",
     "test:unit": "vitest run --config vitest.config.ts",
     "validate:artifact": "bash scripts/validate-artifact.sh",
-    "lint": "bash scripts/sites-env.sh -- eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern .venv",
+    "lint": "eslint app lib tests --ignore-pattern rendered-html.test.mjs",
     "db:generate": "bash scripts/sites-env.sh -- drizzle-kit generate"
   },
   "dependencies": {

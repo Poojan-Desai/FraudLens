@@ -1,3 +1,5 @@
+> **Netlify deployment:** [https://fraudlens-poojan-desai.netlify.app](https://fraudlens-poojan-desai.netlify.app). See [NETLIFY.md](NETLIFY.md) for the current hosting commands; older Sites-specific instructions below are historical.
+
 # FraudLens
 
 FraudLens is an explainable credit-card fraud strategy simulator. It goes beyond ranking transactions: it helps an analyst choose a decision threshold that balances missed fraud, false-positive customer friction, manual-review expense, and review-team capacity.

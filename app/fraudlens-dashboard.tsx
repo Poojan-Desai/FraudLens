@@ -91,7 +91,7 @@ const compactMoney = new Intl.NumberFormat("en-US", {
 const integer = new Intl.NumberFormat("en-US");
 
 const TRANSACTIONS: Transaction[] = [
-  { id: "FL-290874", timestamp: "Today, 10:42:18", merchant: "Nova Electronics", category: "Electronics", country: "Romania", amount: 1849.2, probability: 0.93, actualFraud: true, device: "New device", cardPresent: false, factors: [
+  { id: "FL-290874", timestamp: "Demo day, 10:42:18", merchant: "Nova Electronics", category: "Electronics", country: "Romania", amount: 1849.2, probability: 0.93, actualFraud: true, device: "New device", cardPresent: false, factors: [
     { label: "New device", contribution: 0.18, value: "First seen 3 minutes ago" },
     { label: "Amount vs. customer average", contribution: 0.16, value: "4.3× usual purchase" },
     { label: "Transaction velocity", contribution: 0.13, value: "6 purchases in the last hour" },
@@ -99,41 +99,41 @@ const TRANSACTIONS: Transaction[] = [
     { label: "Card not present", contribution: 0.07, value: "Online checkout" },
     { label: "Account age", contribution: -0.04, value: "Card active for 6.2 years" },
   ] },
-  { id: "FL-290873", timestamp: "Today, 10:41:52", merchant: "Metro Fuel #184", category: "Fuel", country: "United States", amount: 4.99, probability: 0.88, actualFraud: true, device: "Known device", cardPresent: false, factors: [
+  { id: "FL-290873", timestamp: "Demo day, 10:41:52", merchant: "Metro Fuel #184", category: "Fuel", country: "United States", amount: 4.99, probability: 0.88, actualFraud: true, device: "Known device", cardPresent: false, factors: [
     { label: "Card-testing sequence", contribution: 0.24, value: "8 small attempts in 11 minutes" },
     { label: "Previous declines", contribution: 0.18, value: "5 recent declines" },
     { label: "Merchant velocity", contribution: 0.12, value: "Repeated authorization attempts" },
     { label: "Low amount", contribution: -0.05, value: "$4.99 transaction" },
   ] },
-  { id: "FL-290867", timestamp: "Today, 10:37:09", merchant: "CloudStay Hotels", category: "Travel", country: "Spain", amount: 672.4, probability: 0.76, actualFraud: true, device: "New device", cardPresent: false, factors: [
+  { id: "FL-290867", timestamp: "Demo day, 10:37:09", merchant: "CloudStay Hotels", category: "Travel", country: "Spain", amount: 672.4, probability: 0.76, actualFraud: true, device: "New device", cardPresent: false, factors: [
     { label: "Impossible travel", contribution: 0.23, value: "4,012 miles in 38 minutes" },
     { label: "New country", contribution: 0.15, value: "No prior spend in Spain" },
     { label: "New device", contribution: 0.12, value: "Unrecognized browser" },
     { label: "Established travel spend", contribution: -0.07, value: "Travel used 6 times before" },
   ] },
-  { id: "FL-290854", timestamp: "Today, 10:28:43", merchant: "Green Basket", category: "Grocery", country: "United States", amount: 86.31, probability: 0.38, actualFraud: false, device: "Known device", cardPresent: true, factors: [
+  { id: "FL-290854", timestamp: "Demo day, 10:28:43", merchant: "Green Basket", category: "Grocery", country: "United States", amount: 86.31, probability: 0.38, actualFraud: false, device: "Known device", cardPresent: true, factors: [
     { label: "Spending above average", contribution: 0.08, value: "1.6× usual purchase" },
     { label: "Known device", contribution: -0.09, value: "Used for 14 months" },
     { label: "Card physically present", contribution: -0.08, value: "Chip transaction" },
     { label: "Established merchant", contribution: -0.06, value: "19 prior visits" },
   ] },
-  { id: "FL-290841", timestamp: "Today, 10:19:06", merchant: "Eastline Pharmacy", category: "Healthcare", country: "United States", amount: 34.72, probability: 0.17, actualFraud: false, device: "Known device", cardPresent: true, factors: [
+  { id: "FL-290841", timestamp: "Demo day, 10:19:06", merchant: "Eastline Pharmacy", category: "Healthcare", country: "United States", amount: 34.72, probability: 0.17, actualFraud: false, device: "Known device", cardPresent: true, factors: [
     { label: "Card physically present", contribution: -0.11, value: "Chip transaction" },
     { label: "Near home", contribution: -0.09, value: "1.7 miles from home" },
     { label: "Normal purchase amount", contribution: -0.06, value: "0.8× usual purchase" },
   ] },
-  { id: "FL-290829", timestamp: "Today, 10:11:27", merchant: "LuxTime Market", category: "Luxury goods", country: "Singapore", amount: 2890, probability: 0.84, actualFraud: true, device: "New device", cardPresent: false, factors: [
+  { id: "FL-290829", timestamp: "Demo day, 10:11:27", merchant: "LuxTime Market", category: "Luxury goods", country: "Singapore", amount: 2890, probability: 0.84, actualFraud: true, device: "New device", cardPresent: false, factors: [
     { label: "Dormant card", contribution: 0.21, value: "No activity for 143 days" },
     { label: "High-value purchase", contribution: 0.18, value: "8.9× usual purchase" },
     { label: "New country", contribution: 0.14, value: "First purchase in Singapore" },
     { label: "New device", contribution: 0.11, value: "First-seen mobile device" },
   ] },
-  { id: "FL-290812", timestamp: "Today, 09:58:41", merchant: "Rail & Roast", category: "Dining", country: "United States", amount: 18.26, probability: 0.08, actualFraud: false, device: "Known device", cardPresent: true, factors: [
+  { id: "FL-290812", timestamp: "Demo day, 09:58:41", merchant: "Rail & Roast", category: "Dining", country: "United States", amount: 18.26, probability: 0.08, actualFraud: false, device: "Known device", cardPresent: true, factors: [
     { label: "Established merchant", contribution: -0.12, value: "31 prior visits" },
     { label: "Normal time of day", contribution: -0.06, value: "Matches weekday pattern" },
     { label: "Card physically present", contribution: -0.06, value: "Contactless payment" },
   ] },
-  { id: "FL-290798", timestamp: "Today, 09:44:15", merchant: "Streamline Media", category: "Digital services", country: "United States", amount: 15.99, probability: 0.03, actualFraud: false, device: "Known device", cardPresent: false, factors: [
+  { id: "FL-290798", timestamp: "Demo day, 09:44:15", merchant: "Streamline Media", category: "Digital services", country: "United States", amount: 15.99, probability: 0.03, actualFraud: false, device: "Known device", cardPresent: false, factors: [
     { label: "Recurring payment", contribution: -0.16, value: "Billed monthly for 22 months" },
     { label: "Normal purchase amount", contribution: -0.08, value: "Matches prior charges" },
     { label: "Known device", contribution: -0.04, value: "Trusted account token" },
@@ -272,7 +272,7 @@ export default function FraudLensDashboard() {
           <div className="topbar-actions">
             <button className="icon-button" aria-label="Search"><Search size={18} /></button>
             <button className="icon-button notification" aria-label="Notifications"><Bell size={18} /><i /></button>
-              <div className="model-pill"><span>Live model</span><strong>XGBoost v1.0</strong><ChevronDown size={14} /></div>
+              <div className="model-pill"><span>Portfolio demo</span><strong>XGBoost v1.0</strong><ChevronDown size={14} /></div>
           </div>
         </header>
 
@@ -281,7 +281,7 @@ export default function FraudLensDashboard() {
             <div>
               <div className="eyebrow"><span className="live-dot" />Strategy Command Center</div>
               <h1>Balance fraud loss<br />against customer trust.</h1>
-              <p>Turn model scores into a defensible decision policy. Adjust the risk threshold and see the financial and customer impact instantly.</p>
+              <p>Explore a simulated decision policy. Adjust the threshold to compare estimated cost, customer friction, and review workload. This browser simulation is separate from the recorded Python model evaluation.</p>
             </div>
             <div className="intro-actions">
               <button className="secondary-button" onClick={() => setShowAssumptions((value) => !value)}><Settings2 size={17} />Cost assumptions</button>
@@ -349,7 +349,7 @@ export default function FraudLensDashboard() {
             </article>
 
             <article className="panel matrix-panel">
-              <div className="panel-heading"><div><span className="section-label">Decision quality</span><h2>Confusion matrix</h2></div><span className="test-badge">TEST SET</span></div>
+              <div className="panel-heading"><div><span className="section-label">Decision quality</span><h2>Confusion matrix</h2></div><span className="test-badge">SIMULATED SET</span></div>
               <div className="matrix">
                 <span /> <span className="axis-label">Predicted fraud</span><span className="axis-label">Predicted legit</span>
                 <span className="axis-label row">Actual fraud</span><div className="matrix-cell true"><strong>{integer.format(current.truePositives)}</strong><small>Detected</small></div><div className="matrix-cell false"><strong>{integer.format(current.falseNegatives)}</strong><small>Missed</small></div>
@@ -386,7 +386,7 @@ export default function FraudLensDashboard() {
           <section id="transactions" className="product-section">
             <div className="section-heading-row">
               <div><span className="section-kicker">Investigate</span><h2>Transaction explorer</h2><p>Inspect model decisions and translate technical signals into business-readable evidence.</p></div>
-              <div className="section-stat"><span>Flagged at {threshold.toFixed(2)}</span><strong>{integer.format(current.flagged)}</strong><small>of {integer.format(TOTAL_TRANSACTIONS)} test transactions</small></div>
+              <div className="section-stat"><span>Flagged at {threshold.toFixed(2)}</span><strong>{integer.format(current.flagged)}</strong><small>of {integer.format(TOTAL_TRANSACTIONS)} simulated transactions</small></div>
             </div>
             <article className="panel explorer-panel">
               <div className="table-toolbar">
@@ -420,25 +420,25 @@ export default function FraudLensDashboard() {
 
           <section id="models" className="product-section">
             <div className="section-heading-row">
-              <div><span className="section-kicker">Validate</span><h2>Model comparison</h2><p>Same time-based holdout set. Probabilities calibrated on a separate validation window.</p></div>
+              <div><span className="section-kicker">Validate</span><h2>Model comparison</h2><p>Recorded Python evaluation on synthetic data: 52,500 training, 11,250 validation, and 11,250 test transactions.</p></div>
               <div className="validation-chip"><CheckCircle2 size={15} /><div><strong>No temporal leakage</strong><small>Train → validation → test</small></div></div>
             </div>
             <div className="model-grid">
               <article className="panel model-table-panel">
-                <div className="mini-heading"><div><span className="section-label">Performance</span><h3>Holdout metrics</h3></div><span className="date-window">May 14–Jun 06, 2025</span></div>
+                <div className="mini-heading"><div><span className="section-label">Performance</span><h3>Holdout metrics</h3></div><span className="date-window">Synthetic holdout · 11,250 rows</span></div>
                 <div className="model-table-wrap">
                   <table className="model-table">
-                    <thead><tr><th>Model</th><th>Precision</th><th>Recall</th><th>F1</th><th>PR-AUC</th><th>Strategy cost</th><th>Latency</th></tr></thead>
+                    <thead><tr><th>Model</th><th>Precision</th><th>Recall</th><th>F1</th><th>PR-AUC</th></tr></thead>
                     <tbody>{MODELS.map((model) => <tr key={model.name} className={model.best ? "best" : ""}>
                       <td><div className="model-name"><span className={model.best ? "champion" : ""}>{model.name === "XGBoost" ? <Sparkles size={14} /> : <BrainCircuit size={14} />}</span><div><strong>{model.name}</strong><small>{model.version}{model.best ? " · Champion" : ""}</small></div></div></td>
-                      <td>{(model.precision * 100).toFixed(1)}%</td><td>{(model.recall * 100).toFixed(1)}%</td><td>{(model.f1 * 100).toFixed(1)}%</td><td><strong>{model.prAuc.toFixed(3)}</strong></td><td>{money.format(model.cost)}</td><td>{model.latency}</td>
+                      <td>{(model.precision * 100).toFixed(1)}%</td><td>{(model.recall * 100).toFixed(1)}%</td><td>{(model.f1 * 100).toFixed(1)}%</td><td><strong>{model.prAuc.toFixed(3)}</strong></td>
                     </tr>)}</tbody>
                   </table>
                 </div>
-                <div className="model-note"><ShieldCheck size={15} /><span>On the untouched test window, XGBoost captures more fraud at a slightly lower expected cost: <strong>{money.format(MODELS[1].cost - MODELS[0].cost)} saved</strong> versus the transparent baseline.</span></div>
+                <div className="model-note"><ShieldCheck size={15} /><span>Recorded synthetic-data F1: <strong>0.330 for XGBoost versus 0.229 for logistic regression</strong>. These results do not establish real-world fraud-detection performance.</span></div>
               </article>
               <article className="panel pr-panel">
-                <div className="mini-heading"><div><span className="section-label">Imbalanced evaluation</span><h3>Precision–recall curve</h3></div><span className="pr-score">AP <b>0.249</b></span></div>
+                <div className="mini-heading"><div><span className="section-label">Imbalanced evaluation</span><h3>Illustrative precision–recall curves</h3></div><span className="pr-score">Illustrative points</span></div>
                 <div className="pr-chart">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={PR_CURVE} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
@@ -479,11 +479,11 @@ export default function FraudLensDashboard() {
 
           <section id="data" className="data-provenance">
             <div className="provenance-icon"><Database size={22} /></div>
-            <div><span>Dual-dataset design</span><strong>Real benchmark for validity. Synthetic strategy set for explainability.</strong><p>284,807 anonymized European card transactions validate the model; 75,000 clearly labeled simulated transactions power readable features and attack scenarios.</p></div>
-            <div className="provenance-metrics"><div><strong>0.172%</strong><span>real-set fraud rate</span></div><div><strong>1.10%</strong><span>strategy-set fraud rate</span></div><div><strong>12</strong><span>readable features</span></div></div>
+            <div><span>Data provenance</span><strong>Synthetic data, reproducible evaluation, interactive simulations.</strong><p>The Python study uses 75,000 synthetic transactions. Browser strategy curves, transaction examples, and attack scenarios are illustrative. A real-data benchmark downloader is implemented; no completed benchmark run is claimed.</p></div>
+            <div className="provenance-metrics"><div><strong>75,000</strong><span>synthetic study rows</span></div><div><strong>1.10%</strong><span>strategy-set fraud rate</span></div><div><strong>12</strong><span>readable features</span></div></div>
           </section>
 
-          <footer><div className="brand footer-brand"><div className="brand-mark"><ShieldCheck size={18} /></div><div><strong>FraudLens</strong><span>Explainable fraud strategy intelligence</span></div></div><p>Simulated strategy data is clearly labeled. Model metrics shown on a fixed time-based holdout set.</p><a href="#strategy">Back to simulator <ArrowUpRight size={13} /></a></footer>
+          <footer><div className="brand footer-brand"><div className="brand-mark"><ShieldCheck size={18} /></div><div><strong>FraudLens</strong><span>Explainable fraud strategy intelligence</span></div></div><p>Portfolio project by Poojan Desai. Recorded synthetic model metrics; illustrative browser simulations.</p><a href="#strategy">Back to simulator <ArrowUpRight size={13} /></a></footer>
         </div>
       </main>
 
@@ -492,10 +492,10 @@ export default function FraudLensDashboard() {
           <aside className="explanation-drawer" aria-label="Transaction explanation" onClick={(event) => event.stopPropagation()}>
             <div className="drawer-header"><div><span>Decision explanation</span><strong>{selectedTransaction.id}</strong></div><button aria-label="Close explanation" onClick={() => setSelectedTransaction(null)}><X size={19} /></button></div>
             <div className="risk-hero"><div className={`risk-ring ${selectedTransaction.probability >= .7 ? "high" : selectedTransaction.probability >= .35 ? "medium" : "low"}`}><strong>{(selectedTransaction.probability * 100).toFixed(0)}%</strong><span>fraud risk</span></div><div><span className={`decision-badge ${selectedTransaction.probability >= threshold ? "flagged" : "approved"}`}>{selectedTransaction.probability >= threshold ? "Flagged for review" : "Approved"}</span><h2>{money.format(selectedTransaction.amount)}</h2><p>{selectedTransaction.merchant}<br />{selectedTransaction.country} · {selectedTransaction.timestamp}</p></div></div>
-            <div className="drawer-callout"><Eye size={16} /><p><strong>Why this score?</strong>The model combined {selectedTransaction.factors.length} strongest signals. Contributions show how each feature moved risk from the calibrated baseline.</p></div>
-            <div className="factor-section"><div className="factor-heading"><span>Risk factors</span><small>SHAP contribution</small></div>{selectedTransaction.factors.map((factor) => <div key={factor.label} className="factor-row"><div className={`factor-direction ${factor.contribution > 0 ? "up" : "down"}`}>{factor.contribution > 0 ? <ArrowUpRight size={15} /> : <ArrowDownRight size={15} />}</div><div className="factor-copy"><strong>{factor.label}</strong><small>{factor.value}</small></div><div className={`factor-value ${factor.contribution > 0 ? "up" : "down"}`}>{factor.contribution > 0 ? "+" : ""}{Math.round(factor.contribution * 100)} pts</div></div>)}</div>
+            <div className="drawer-callout"><Eye size={16} /><p><strong>Why this score?</strong>This example shows {selectedTransaction.factors.length} illustrative risk signals. The displayed scores and contributions are authored demo values, not a live model prediction or computed SHAP attribution.</p></div>
+            <div className="factor-section"><div className="factor-heading"><span>Risk factors</span><small>Illustrative contribution</small></div>{selectedTransaction.factors.map((factor) => <div key={factor.label} className="factor-row"><div className={`factor-direction ${factor.contribution > 0 ? "up" : "down"}`}>{factor.contribution > 0 ? <ArrowUpRight size={15} /> : <ArrowDownRight size={15} />}</div><div className="factor-copy"><strong>{factor.label}</strong><small>{factor.value}</small></div><div className={`factor-value ${factor.contribution > 0 ? "up" : "down"}`}>{factor.contribution > 0 ? "+" : ""}{Math.round(factor.contribution * 100)} pts</div></div>)}</div>
             <div className="transaction-context"><span>Transaction context</span><div><small>Device</small><strong>{selectedTransaction.device}</strong></div><div><small>Channel</small><strong>{selectedTransaction.cardPresent ? "Card present" : "Card not present"}</strong></div><div><small>Category</small><strong>{selectedTransaction.category}</strong></div><div><small>Known outcome</small><strong>{selectedTransaction.actualFraud ? "Confirmed fraud" : "Legitimate"}</strong></div></div>
-            <p className="explanation-footnote"><Layers3 size={13} /> SHAP values explain this model prediction; they do not establish causation.</p>
+            <p className="explanation-footnote"><Layers3 size={13} /> Illustrative factors explain the demo scenario; they do not establish causation.</p>
           </aside>
         </div>
       )}
