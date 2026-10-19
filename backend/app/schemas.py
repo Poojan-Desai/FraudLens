@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class StrategyAssumptions(BaseModel):
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
     false_positive_cost: float = Field(default=18.0, ge=0)
     manual_review_cost: float = Field(default=1.2, ge=0)
     fraud_recovery_rate: float = Field(default=0.35, ge=0, le=1)

@@ -1,0 +1,15 @@
+{
+  "schema_version": 2,
+  "dataset_version": "synthetic_strategy_v1",
+  "row_count": 75000,
+  "seed": 42,
+  "split_fractions": [0.6, 0.15, 0.1, 0.15],
+  "xgboost_estimators": 300,
+  "assumptions": {
+    "false_positive_cost": 18,
+    "manual_review_cost": 1.2,
+    "fraud_recovery_rate": 0.35,
+    "customer_friction_cost": 0,
+    "maximum_review_capacity": 1400
+  }
+}
