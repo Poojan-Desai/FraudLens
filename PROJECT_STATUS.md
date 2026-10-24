@@ -1,49 +1,28 @@
-# FraudLens Project Status
+# FraudLens implementation status
 
-Last updated: 2026-08-09
+Updated October 24, 2026. This is a local development branch; public Netlify behavior has not been changed.
 
-## Current state
+## Implemented and locally verified
 
-FraudLens is a working, deployed portfolio MVP with a reproducible Python analytics backend. The dashboard is complete enough for the planned 60-second internship demo.
+- Four-window synthetic experiment with fixed parameters, training-only preprocessing, separate sigmoid calibration and cost-policy selection, and final held-out metrics.
+- Immutable, fingerprinted study evidence and model bundles, prediction CSV, actual test threshold aggregates and downloadable browser snapshot.
+- Saved-evidence verification recomputes held-out metrics, validates identities/bounds, checks file hashes and avoids model-pickle loading. Regression tests detect corrupted artifacts and altered reported metrics.
+- Unified API/study/browser total-cost half-up cent rounding and rejected nonfinite transaction amounts at the API schema boundary.
+- Static UI computes threshold costs from actual held-out score aggregates and chooses its policy from selection aggregates only; real PR points and calibration evidence replace illustrative model-evaluation graphics.
+- Fictional transaction/attack examples stay labeled as authored. Example comparisons are immediate, without fake processing delays.
+- Fractional/null target-label rejection, finite numeric schema checks, unknown-source rejection, and corrected Docker dashboard hostname/port.
+- Upgraded Next to 16.3.8 and restored install-time audit notices; critical advisory count is zero, but 31 affected packages (22 high) remain.
+- Added repeatable isolated browser verification and a CI definition. Local tests/build status is recorded in the phase report; remote CI and deployment remain unexecuted.
 
-## Implementation stages
+## Local evidence
 
-| Stage | Status | Evidence |
-| --- | --- | --- |
-| 1. Repository and structure | Complete | React app, FastAPI backend, data/artifact/script folders |
-| 2. Real dataset download and validation | Implemented | OpenML data ID 1597 downloader and strict schema validation; raw CSV intentionally not committed |
-| 3. Synthetic generator | Complete | Deterministic 75,000-row generator, seed 42, readable features, clearly labeled source |
-| 4. SQLite schema and import foundation | Complete | SQLAlchemy tables for transactions, model scores, explanations, and simulation runs |
-| 5. Logistic Regression | Complete | Chronological split, preprocessing pipeline, class weighting, artifact and metrics output |
-| 6. XGBoost and comparison | Complete | Calibrated XGBoost, untouched test metrics, joblib artifact bundle |
-| 7. Financial-cost engine | Complete | Missed loss, friction, review cost, capacity overflow, cost-optimal threshold |
-| 8. FastAPI endpoints | Complete | Health, strategy simulation, and attack-pattern endpoints with Pydantic validation |
-| 9. React dashboard | Complete | Simulator, explorer, explanations, model comparison, PR curve, and attack lab |
-| 10. Tests and documentation | Complete | Frontend/backend tests, README, architecture diagram, and demo script |
+Current `public/evaluation.json` includes run identity, hashes, versions, parameters, window bounds, all metrics and limitations. Local model/prediction artifacts are intentionally ignored by Git. README contains exact setup/training/repeat commands and current measured results.
 
-## Verified metrics
+On October 24, 32 backend tests, seven frontend tests, lint and the static build
+passed locally. Two complete 75,000-row study runs reproduced the same prediction
+CSV and browser snapshot bytes. This remains simulated-data evidence, not a
+validated real-payment benchmark or profitability claim.
 
-- Synthetic rows: 75,000
-- Fraud cases: 823 (1.10%)
-- Split: 52,500 train / 11,250 validation / 11,250 test
-- Calibrated XGBoost: PR-AUC 0.249, precision 51.7%, recall 24.2%, F1 33.0%
-- Logistic Regression: PR-AUC 0.231, precision 50.0%, recall 14.8%, F1 22.9%
-- Backend tests: 10 passing
-- Frontend strategy tests: 5 passing
+## Incomplete
 
-## Resume/demo readiness
-
-- The dashboard avoids misleading accuracy claims.
-- Real and synthetic datasets have clearly separated purposes.
-- Metrics shown in the model table match a reproducible local run.
-- Explanation copy includes the causation caveat.
-- The attack lab reacts to the currently selected strategy threshold.
-
-## Sensible next improvements
-
-These are not blockers for the MVP:
-
-1. Download and run the European benchmark locally, then add its actual comparison metrics to a second model-results tab.
-2. Add Platt-scaling calibration plots and Brier score to the model page.
-3. Persist simulation runs through the API so analysts can compare saved strategies.
-4. Record the 60-second demo and add it to the repository README.
+Real-model transaction investigation/SHAP UI, persisted analyst decisions, model-serving API, monitoring, public benchmark evaluation, confidence intervals, broader accessibility/typography work and a complete Docker execution check. No PyTorch model or production/cloud integration is claimed.

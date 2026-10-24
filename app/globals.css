@@ -311,3 +311,28 @@ footer p { margin-left: auto; font-size: 7.5px; } footer > a { color: #37735b; f
   .kpi-card { min-height: 95px; }
   .threshold-panel, .matrix-panel, .cost-panel { padding: 15px; }
 }
+
+.evaluation-evidence { margin-top: 32px; padding: 20px; border: 1px solid #d5dfd8; background: #fff; border-radius: 8px; color: #273d32; font-size: 14px; line-height: 1.6; }
+.evaluation-evidence summary { cursor: pointer; font-size: 16px; font-weight: 650; }
+.evaluation-evidence summary:focus-visible, a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-visible { outline: 3px solid #17664a; outline-offset: 3px; }
+.evaluation-evidence p { overflow-wrap: anywhere; }
+.evaluation-evidence code { font-size: 12px; }
+.evaluation-evidence a { color: #135b40; text-decoration: underline; }
+.evidence-table-wrap { overflow-x: auto; margin: 18px 0; }
+.evaluation-evidence table { width: 100%; border-collapse: collapse; min-width: 460px; font-size: 13px; text-align: left; }
+.evaluation-evidence th, .evaluation-evidence td { border-bottom: 1px solid #e1e7e3; padding: 10px 12px; }
+.evaluation-evidence caption { text-align: left; font-size: 14px; font-weight: 650; padding-bottom: 8px; }
+.evaluation-evidence li { margin: 8px 0; }
+.content-wrap > *, .analytics-grid > *, .model-grid > *, .panel, .page-intro > *, .strategy-banner > *, .topbar-actions { min-width: 0; }
+.model-grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+.analytics-grid { grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); }
+.model-table-wrap, .transaction-table-wrap, .evidence-table-wrap { max-width: 100%; overflow-x: auto; contain: paint; }
+.kpi-copy > span { white-space: normal; }
+.assumptions-panel { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.assumption-error { grid-column: 1 / -1; color: #8c2c20; font-size: 13px; margin: 0; }
+.panel-heading, .mini-heading { flex-wrap: wrap; }
+.chart-wrap, .pr-chart { min-width: 0; max-width: 100%; overflow: clip; contain: paint; }
+@media (max-width: 1050px) { .analytics-grid, .model-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 760px) { .assumptions-panel { grid-template-columns: minmax(0, 1fr); } .strategy-banner > div:nth-child(2) { min-width: 0; } .page-intro p { font-size: 12px; } }
+@media (max-width: 760px) { .sidebar .brand > div:last-child { display: none; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; scroll-behavior: auto !important; transition: none !important; } }

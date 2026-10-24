@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 
 from ..schemas import ScoredTransaction, StrategyAssumptions
+from .money import round_cost
 
 
 @dataclass(frozen=True)
@@ -84,5 +85,5 @@ def evaluate_strategy(
         false_positive_cost=round(fp_cost, 2),
         manual_review_cost=round(review_cost, 2),
         capacity_overflow_cost=round(overflow, 2),
-        total_strategy_cost=round(missed_loss + fp_cost + review_cost + overflow, 2),
+        total_strategy_cost=round_cost(missed_loss + fp_cost + review_cost + overflow),
     )

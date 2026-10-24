@@ -1,80 +1,50 @@
+import evaluation from "../public/evaluation.json";
+
+export { evaluation };
+export type ModelKey = keyof typeof evaluation.models;
+export const TOTAL_TRANSACTIONS = evaluation.windows.test.rows;
+export const FRAUD_TRANSACTIONS = evaluation.windows.test.fraud_rows;
+export const LEGITIMATE_TRANSACTIONS = TOTAL_TRANSACTIONS - FRAUD_TRANSACTIONS;
+export const DEFAULT_MODEL: ModelKey = "xgboost";
+
 export type StrategyPoint = {
-  threshold: number;
-  recall: number;
-  precision: number;
-  truePositives: number;
-  falsePositives: number;
-  falseNegatives: number;
-  trueNegatives: number;
-  totalCost: number;
-  missedLoss: number;
-  frictionCost: number;
-  reviewCost: number;
-  fraudDetected: number;
-  fraudMissed: number;
-  flagged: number;
+  threshold: number; recall: number; precision: number;
+  truePositives: number; falsePositives: number; falseNegatives: number; trueNegatives: number;
+  totalCost: number; missedLoss: number; frictionCost: number; reviewCost: number;
+  fraudDetected: number; fraudMissed: number; flagged: number;
 };
 
-export const TOTAL_TRANSACTIONS = 75_000;
-export const FRAUD_TRANSACTIONS = 823;
-export const LEGITIMATE_TRANSACTIONS = TOTAL_TRANSACTIONS - FRAUD_TRANSACTIONS;
-export const TOTAL_FRAUD_DOLLARS = 77_707.43;
-const AVG_FRAUD_AMOUNT = TOTAL_FRAUD_DOLLARS / FRAUD_TRANSACTIONS;
+type StoredPoint = (typeof evaluation.models.xgboost.test_thresholds)[number];
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}
-
-export function strategyAt(
-  threshold: number,
-  frictionPerDecline: number,
-  reviewCostPerCase: number,
-  recoveryRate: number,
-  reviewCapacity: number,
-): StrategyPoint {
-  if (threshold < 0 || threshold > 1) throw new RangeError("threshold must be between 0 and 1");
-  const recall = clamp(0.985 - Math.pow(threshold, 1.38) * 0.88, 0.08, 0.98);
-  const falsePositiveRate = 0.076 * Math.pow(1 - threshold, 3.2) + 0.00005;
-  const truePositives = Math.round(FRAUD_TRANSACTIONS * recall);
-  const falseNegatives = FRAUD_TRANSACTIONS - truePositives;
-  const falsePositives = Math.round(LEGITIMATE_TRANSACTIONS * falsePositiveRate);
-  const trueNegatives = LEGITIMATE_TRANSACTIONS - falsePositives;
-  const flagged = truePositives + falsePositives;
-  const precision = truePositives / Math.max(1, flagged);
-  const fraudDetected = truePositives * AVG_FRAUD_AMOUNT;
-  const fraudMissed = falseNegatives * AVG_FRAUD_AMOUNT;
-  const missedLoss = fraudMissed * (1 - recoveryRate / 100);
-  const frictionCost = falsePositives * frictionPerDecline;
-  const reviewed = Math.min(flagged, reviewCapacity);
-  const reviewCost = reviewed * reviewCostPerCase;
-  const capacityPenalty = Math.max(0, flagged - reviewCapacity) * 1.65;
-
+function pricePoint(point: StoredPoint, friction: number, review: number, recovery: number, capacity: number): StrategyPoint {
+  if (![friction, review, recovery, capacity].every(Number.isFinite) || friction < 0 || review < 0 || recovery < 0 || recovery > 100 || capacity < 0 || !Number.isInteger(capacity)) {
+    throw new RangeError("Costs and capacity must be nonnegative; recovery must be 0–100 percent");
+  }
+  const missedLoss = point.fraud_missed * (1 - recovery / 100);
+  const frictionCost = point.false_positives * friction;
+  const reviewCost = Math.min(point.flagged, capacity) * review;
+  const overflow = Math.max(0, point.flagged - capacity) * 1.65;
   return {
-    threshold,
-    recall,
-    precision,
-    truePositives,
-    falsePositives,
-    falseNegatives,
-    trueNegatives,
-    totalCost: missedLoss + frictionCost + reviewCost + capacityPenalty,
-    missedLoss,
-    frictionCost,
-    reviewCost,
-    fraudDetected,
-    fraudMissed,
-    flagged,
+    threshold: point.threshold, recall: point.recall, precision: point.precision,
+    truePositives: point.true_positives, falsePositives: point.false_positives,
+    falseNegatives: point.false_negatives, trueNegatives: point.true_negatives,
+    totalCost: Math.floor((missedLoss + frictionCost + reviewCost + overflow) * 100 + 0.5 + 1e-7) / 100,
+    missedLoss, frictionCost, reviewCost, fraudDetected: point.fraud_detected,
+    fraudMissed: point.fraud_missed, flagged: point.flagged,
   };
 }
 
-export function findOptimalStrategy(
-  frictionPerDecline: number,
-  reviewCostPerCase: number,
-  recoveryRate: number,
-  reviewCapacity: number,
-) {
-  const curve = Array.from({ length: 99 }, (_, index) =>
-    strategyAt((index + 1) / 100, frictionPerDecline, reviewCostPerCase, recoveryRate, reviewCapacity),
-  );
-  return curve.reduce((best, point) => point.totalCost < best.totalCost ? point : best);
+/** Explore actual test scores on the exported 0.01 grid; never choose policy here. */
+export function strategyAt(threshold: number, friction: number, review: number, recovery: number, capacity: number, model: ModelKey = DEFAULT_MODEL): StrategyPoint {
+  const index = Math.round(threshold * 100) - 1;
+  if (!Number.isFinite(threshold) || index < 0 || index >= 99 || Math.abs((index + 1) / 100 - threshold) > 1e-9) {
+    throw new RangeError("threshold must be on the evaluated 0.01–0.99 grid");
+  }
+  return pricePoint(evaluation.models[model].test_thresholds[index], friction, review, recovery, capacity);
+}
+
+/** Policy selection uses selection-window scores only, including changed costs. */
+export function findOptimalStrategy(friction: number, review: number, recovery: number, capacity: number, model: ModelKey = DEFAULT_MODEL): StrategyPoint {
+  const curve = evaluation.models[model].selection_thresholds.map((point) => pricePoint(point, friction, review, recovery, capacity));
+  return curve.reduce((best, point) => point.totalCost < best.totalCost || (Math.abs(point.totalCost - best.totalCost) < 1e-8 && point.threshold > best.threshold) ? point : best);
 }

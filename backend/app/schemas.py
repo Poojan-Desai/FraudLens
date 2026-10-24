@@ -13,7 +13,7 @@ class StrategyAssumptions(BaseModel):
 
 
 class ScoredTransaction(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
 
     transaction_id: int
     amount: float = Field(ge=0)

@@ -8,7 +8,6 @@ from __future__ import annotations
 import hashlib
 from importlib.metadata import version
 import json
-import math
 from pathlib import Path
 import platform
 import time
@@ -25,6 +24,7 @@ from sklearn.metrics import average_precision_score, brier_score_loss, precision
 from sklearn.pipeline import Pipeline
 
 from ..schemas import StrategyAssumptions
+from ..services.money import round_cost
 from .synthetic import generate_transactions
 from .train import _preprocessor
 from .validation import validate_schema
@@ -105,7 +105,7 @@ def threshold_summary(labels: np.ndarray, probabilities: np.ndarray, amounts: np
         "review_cost": round(review, 2), "capacity_overflow_cost": round(overflow, 2),
         # Shared browser convention: nearest cent, half-cent upward, then a
         # higher-threshold tie break. Tiny tolerance absorbs summation noise.
-        "total_cost": math.floor((loss + friction + review + overflow) * 100 + 0.5 + 1e-7) / 100,
+        "total_cost": round_cost(loss + friction + review + overflow),
     }
 
 
@@ -150,7 +150,7 @@ def run_experiment(config: ExperimentConfig, output_dir: Path, snapshot_path: Pa
     dataset_hash = hashlib.sha256(dataset_bytes).hexdigest()
     config_hash = hashlib.sha256(canonical_json(config.model_dump(mode="json"))).hexdigest()
     repository = Path(__file__).resolve().parents[3]
-    source_files = ["backend/app/ml/experiment.py", "backend/app/ml/train.py", "backend/app/ml/synthetic.py", "backend/app/ml/validation.py", "backend/app/schemas.py"]
+    source_files = ["backend/app/ml/experiment.py", "backend/app/ml/train.py", "backend/app/ml/synthetic.py", "backend/app/ml/validation.py", "backend/app/schemas.py", "backend/app/services/money.py"]
     provenance = {
         "python": platform.python_version(),
         "platform": platform.platform(), "machine": platform.machine(),

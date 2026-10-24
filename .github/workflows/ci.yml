@@ -15,6 +15,7 @@ jobs:
       - run: pip install -r backend/requirements.txt
       - run: PYTHONPATH=. python -m pytest -q backend/tests
       - run: PYTHONPATH=. python scripts/run_experiment.py --output artifacts/ci
+      - run: PYTHONPATH=. python scripts/verify_experiment.py artifacts/ci/*
       - uses: actions/upload-artifact@v4
         with:
           name: synthetic-evaluation

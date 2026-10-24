@@ -6,6 +6,8 @@ import {
   AreaChart,
   CartesianGrid,
   Line,
+  Scatter,
+  ScatterChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -16,7 +18,6 @@ import {
   ArrowDownRight,
   ArrowRight,
   ArrowUpRight,
-  Bell,
   BrainCircuit,
   CheckCircle2,
   ChevronDown,
@@ -34,7 +35,6 @@ import {
   LockKeyhole,
   MapPin,
   Play,
-  RefreshCw,
   Search,
   Settings2,
   ShieldCheck,
@@ -48,6 +48,9 @@ import {
 } from "lucide-react";
 import {
   LEGITIMATE_TRANSACTIONS,
+  FRAUD_TRANSACTIONS,
+  evaluation,
+  findOptimalStrategy,
   strategyAt,
   TOTAL_TRANSACTIONS,
   type StrategyPoint,
@@ -141,16 +144,8 @@ const TRANSACTIONS: Transaction[] = [
 ];
 
 const MODELS = [
-  { name: "XGBoost", version: "v1.0", precision: 0.517, recall: 0.242, f1: 0.330, prAuc: 0.249, cost: 5746, latency: "1.7 ms", training: "0.42 s", best: true },
-  { name: "Logistic Regression", version: "v1.0", precision: 0.500, recall: 0.148, f1: 0.229, prAuc: 0.231, cost: 5805, latency: "0.8 ms", training: "0.52 s", best: false },
-];
-
-const PR_CURVE = [
-  { recall: 0.05, xgboost: 0.600, logistic: 0.667 }, { recall: 0.15, xgboost: 0.633, logistic: 0.500 },
-  { recall: 0.30, xgboost: 0.345, logistic: 0.292 }, { recall: 0.45, xgboost: 0.143, logistic: 0.177 },
-  { recall: 0.60, xgboost: 0.076, logistic: 0.082 }, { recall: 0.75, xgboost: 0.055, logistic: 0.057 },
-  { recall: 0.85, xgboost: 0.022, logistic: 0.026 }, { recall: 0.93, xgboost: 0.014, logistic: 0.019 },
-  { recall: 0.98, xgboost: 0.012, logistic: 0.012 },
+  evaluation.models.xgboost,
+  evaluation.models.logistic_regression,
 ];
 
 const ATTACKS: AttackScenario[] = [
@@ -200,17 +195,17 @@ function CostTooltip({ active, payload }: { active?: boolean; payload?: Array<{ 
 }
 
 export default function FraudLensDashboard() {
-  const [threshold, setThreshold] = useState(0.42);
+  const [threshold, setThreshold] = useState(evaluation.models.xgboost.selected_threshold);
   const [frictionCost, setFrictionCost] = useState(18);
   const [reviewCost, setReviewCost] = useState(1.2);
   const [recoveryRate, setRecoveryRate] = useState(35);
   const [reviewCapacity, setReviewCapacity] = useState(1_400);
   const [showAssumptions, setShowAssumptions] = useState(false);
+  const [assumptionError, setAssumptionError] = useState("");
   const [transactionSearch, setTransactionSearch] = useState("");
   const [transactionFilter, setTransactionFilter] = useState<"all" | "flagged" | "approved">("all");
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [attackRuns, setAttackRuns] = useState<Record<string, { detected: boolean; at: string }>>({});
-  const [runningAttack, setRunningAttack] = useState<string | null>(null);
+  const [attackRuns, setAttackRuns] = useState<Record<string, { detected: boolean; threshold: number }>>({});
 
   const strategyCurve = useMemo(
     () => Array.from({ length: 99 }, (_, index) => strategyAt((index + 1) / 100, frictionCost, reviewCost, recoveryRate, reviewCapacity)),
@@ -220,13 +215,12 @@ export default function FraudLensDashboard() {
     () => strategyAt(threshold, frictionCost, reviewCost, recoveryRate, reviewCapacity),
     [threshold, frictionCost, reviewCost, recoveryRate, reviewCapacity],
   );
-  const optimum = useMemo(
-    () => strategyCurve.reduce((best, point) => point.totalCost < best.totalCost ? point : best),
-    [strategyCurve],
+  const policy = useMemo(
+    () => findOptimalStrategy(frictionCost, reviewCost, recoveryRate, reviewCapacity),
+    [frictionCost, reviewCost, recoveryRate, reviewCapacity],
   );
 
   const selectedX = `${threshold * 100}%`;
-  const optimumDelta = current.totalCost - optimum.totalCost;
   const filteredTransactions = TRANSACTIONS.filter((transaction) => {
     const matchesSearch = `${transaction.id} ${transaction.merchant} ${transaction.country} ${transaction.category}`.toLowerCase().includes(transactionSearch.toLowerCase());
     const isFlagged = transaction.probability >= threshold;
@@ -234,11 +228,17 @@ export default function FraudLensDashboard() {
   });
 
   function runAttack(attack: AttackScenario) {
-    setRunningAttack(attack.id);
-    window.setTimeout(() => {
-      setAttackRuns((runs) => ({ ...runs, [attack.id]: { detected: attack.probability >= threshold, at: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) } }));
-      setRunningAttack(null);
-    }, 650);
+    setAttackRuns((runs) => ({ ...runs, [attack.id]: { detected: attack.probability >= threshold, threshold } }));
+  }
+
+  function updateAssumption(label: string, raw: string, setter: (value: number) => void, maximum: number, whole = false) {
+    const value = Number(raw);
+    if (!Number.isFinite(value) || value < 0 || value > maximum || (whole && !Number.isInteger(value))) {
+      setAssumptionError(`${label} must be ${whole ? "a whole number" : "a number"} from 0 to ${maximum}. The last valid calculation is retained.`);
+      return;
+    }
+    setter(value);
+    setAssumptionError("");
   }
 
   return (
@@ -256,12 +256,12 @@ export default function FraudLensDashboard() {
           <a href="#models"><BrainCircuit size={18} />Model comparison</a>
           <a href="#attacks"><FlaskConical size={18} />Attack pattern lab</a>
           <p>System</p>
-          <a href="#data"><Activity size={18} />Data health</a>
-          <a href="#settings"><Settings2 size={18} />Assumptions</a>
+          <a href="#data"><Activity size={18} />Data provenance</a>
+          <a href="#settings" onClick={() => setShowAssumptions(true)}><Settings2 size={18} />Assumptions</a>
         </nav>
 
         <div className="sidebar-foot">
-          <div className="dataset-chip"><span /><div><strong>Synthetic strategy set</strong><small>75,000 transactions</small></div></div>
+          <div className="dataset-chip"><span /><div><strong>Synthetic test window</strong><small>{integer.format(TOTAL_TRANSACTIONS)} scored transactions</small></div></div>
           <div className="user-chip"><div className="avatar">PD</div><div><strong>Portfolio workspace</strong><small>Analyst view</small></div><ChevronDown size={15} /></div>
         </div>
       </aside>
@@ -270,9 +270,7 @@ export default function FraudLensDashboard() {
         <header className="topbar">
           <div className="breadcrumbs"><span>FraudLens</span><ArrowRight size={13} /><strong>Strategy simulator</strong></div>
           <div className="topbar-actions">
-            <button className="icon-button" aria-label="Search"><Search size={18} /></button>
-            <button className="icon-button notification" aria-label="Notifications"><Bell size={18} /><i /></button>
-              <div className="model-pill"><span>Portfolio demo</span><strong>XGBoost v1.0</strong><ChevronDown size={14} /></div>
+              <div className="model-pill"><span>Precomputed study</span><strong>Calibrated XGBoost</strong></div>
           </div>
         </header>
 
@@ -281,11 +279,11 @@ export default function FraudLensDashboard() {
             <div>
               <div className="eyebrow"><span className="live-dot" />Strategy Command Center</div>
               <h1>Balance fraud loss<br />against customer trust.</h1>
-              <p>Explore a simulated decision policy. Adjust the threshold to compare estimated cost, customer friction, and review workload. This browser simulation is separate from the recorded Python model evaluation.</p>
+              <p>Explore real predictions from a trained model on {integer.format(TOTAL_TRANSACTIONS)} held-out synthetic transactions. The policy threshold is chosen on a separate selection window. Test exploration does not retune or validate a new policy.</p>
             </div>
             <div className="intro-actions">
               <button className="secondary-button" onClick={() => setShowAssumptions((value) => !value)}><Settings2 size={17} />Cost assumptions</button>
-              <button className="primary-button" onClick={() => setThreshold(optimum.threshold)}><Sparkles size={17} />Apply optimum <span>{optimum.threshold.toFixed(2)}</span></button>
+              <button className="primary-button" onClick={() => setThreshold(policy.threshold)}><Sparkles size={17} />Apply selection policy <span>{policy.threshold.toFixed(2)}</span></button>
             </div>
           </section>
 
@@ -297,29 +295,30 @@ export default function FraudLensDashboard() {
             </div>
             <div className="banner-divider" />
             <div className="banner-stat">
-              <span>Cost gap to optimum</span>
-              <strong className={optimumDelta < 500 ? "good" : "warn"}>{optimumDelta < 500 ? "Optimized" : `+${compactMoney.format(optimumDelta)}`}</strong>
+              <span>Selection-window policy</span>
+              <strong>{policy.threshold.toFixed(2)} threshold</strong>
             </div>
             <div className="banner-stat">
-              <span>Review capacity</span>
+              <span>Test-window review capacity</span>
               <strong>{integer.format(Math.min(current.flagged, reviewCapacity))} / {integer.format(reviewCapacity)}</strong>
             </div>
           </section>
 
           {showAssumptions && (
-            <section className="assumptions-panel">
-              <label><span>False-positive friction</span><div><b>$</b><input aria-label="False-positive friction cost" type="number" min="0" value={frictionCost} onChange={(event) => setFrictionCost(Number(event.target.value))} /></div></label>
-              <label><span>Manual review cost</span><div><b>$</b><input aria-label="Manual review cost" type="number" min="0" step="0.1" value={reviewCost} onChange={(event) => setReviewCost(Number(event.target.value))} /></div></label>
-              <label><span>Fraud recovery</span><div><input aria-label="Fraud recovery rate" type="number" min="0" max="100" value={recoveryRate} onChange={(event) => setRecoveryRate(Number(event.target.value))} /><b>%</b></div></label>
-              <label><span>Daily review capacity</span><div><input aria-label="Daily review capacity" type="number" min="0" value={reviewCapacity} onChange={(event) => setReviewCapacity(Number(event.target.value))} /></div></label>
+            <section className="assumptions-panel" id="settings">
+              <label><span>False-positive friction</span><div><b>$</b><input aria-label="False-positive friction cost" type="number" min="0" max="1000000" value={frictionCost} onChange={(event) => updateAssumption("Friction cost", event.target.value, setFrictionCost, 1000000)} /></div></label>
+              <label><span>Manual review cost</span><div><b>$</b><input aria-label="Manual review cost" type="number" min="0" max="1000000" step="0.1" value={reviewCost} onChange={(event) => updateAssumption("Review cost", event.target.value, setReviewCost, 1000000)} /></div></label>
+              <label><span>Fraud recovery</span><div><input aria-label="Fraud recovery rate" type="number" min="0" max="100" value={recoveryRate} onChange={(event) => updateAssumption("Recovery rate", event.target.value, setRecoveryRate, 100)} /><b>%</b></div></label>
+              <label><span>Test-window review capacity</span><div><input aria-label="Test-window review capacity" type="number" min="0" max="1000000" value={reviewCapacity} onChange={(event) => updateAssumption("Review capacity", event.target.value, setReviewCapacity, 1000000, true)} /></div></label>
+              {assumptionError && <p role="alert" className="assumption-error">{assumptionError}</p>}
             </section>
           )}
 
           <section className="kpi-grid">
-            <KpiCard label="Fraud dollars detected" value={compactMoney.format(current.fraudDetected)} detail={`${(current.recall * 100).toFixed(1)}% of fraud captured`} icon={ShieldCheck} />
+            <KpiCard label="Fraud dollars detected" value={compactMoney.format(current.fraudDetected)} detail={`${(current.recall * 100).toFixed(1)}% of labeled fraud cases`} icon={ShieldCheck} />
             <KpiCard label="Fraud dollars missed" value={compactMoney.format(current.fraudMissed)} detail={`${integer.format(current.falseNegatives)} undetected cases`} icon={TrendingDown} tone="amber" />
-            <KpiCard label="Legitimate declines" value={integer.format(current.falsePositives)} detail={`${(current.falsePositives / LEGITIMATE_TRANSACTIONS * 100).toFixed(2)}% of good customers`} icon={UsersRound} tone="blue" />
-            <KpiCard label="Estimated strategy cost" value={compactMoney.format(current.totalCost)} detail={`${money.format(optimum.totalCost)} at optimum`} icon={CircleDollarSign} tone="violet" />
+            <KpiCard label="Legitimate declines" value={integer.format(current.falsePositives)} detail={`${(current.falsePositives / LEGITIMATE_TRANSACTIONS * 100).toFixed(2)}% of legitimate test transactions`} icon={UsersRound} tone="blue" />
+            <KpiCard label="Estimated test-window cost" value={compactMoney.format(current.totalCost)} detail={`Friction + review + missed loss + overflow`} icon={CircleDollarSign} tone="violet" />
           </section>
 
           <section className="analytics-grid">
@@ -349,7 +348,7 @@ export default function FraudLensDashboard() {
             </article>
 
             <article className="panel matrix-panel">
-              <div className="panel-heading"><div><span className="section-label">Decision quality</span><h2>Confusion matrix</h2></div><span className="test-badge">SIMULATED SET</span></div>
+              <div className="panel-heading"><div><span className="section-label">Decision quality</span><h2>Confusion matrix</h2></div><span className="test-badge">HELD-OUT SYNTHETIC</span></div>
               <div className="matrix">
                 <span /> <span className="axis-label">Predicted fraud</span><span className="axis-label">Predicted legit</span>
                 <span className="axis-label row">Actual fraud</span><div className="matrix-cell true"><strong>{integer.format(current.truePositives)}</strong><small>Detected</small></div><div className="matrix-cell false"><strong>{integer.format(current.falseNegatives)}</strong><small>Missed</small></div>
@@ -360,7 +359,7 @@ export default function FraudLensDashboard() {
 
           <section className="panel cost-panel">
             <div className="panel-heading cost-heading">
-              <div><span className="section-label">Financial optimization</span><h2>Total strategy cost by threshold</h2><p>Missed fraud + customer friction + manual review costs</p></div>
+              <div><span className="section-label">Test sensitivity analysis</span><h2>Total strategy cost by threshold</h2><p>Actual test-score aggregates. Exploring these costs cannot select or validate a new policy.</p></div>
               <div className="legend"><span><i className="legend-total" />Total cost</span><span><i className="legend-missed" />Missed fraud loss</span><span><i className="legend-friction" />Customer friction</span></div>
             </div>
             <div className="chart-wrap">
@@ -373,20 +372,34 @@ export default function FraudLensDashboard() {
                   <XAxis dataKey="threshold" tickFormatter={(value) => Number(value).toFixed(1)} tick={{ fill: "#7d8882", fontSize: 11 }} axisLine={false} tickLine={false} interval={9} />
                   <YAxis tickFormatter={(value) => `$${Math.round(value / 1000)}k`} tick={{ fill: "#7d8882", fontSize: 11 }} axisLine={false} tickLine={false} width={46} />
                   <Tooltip content={<CostTooltip />} />
-                  <Area type="monotone" dataKey="totalCost" stroke="#0d9667" strokeWidth={2.5} fill="url(#costFill)" />
-                  <Line type="monotone" dataKey="missedLoss" stroke="#d9961a" strokeWidth={1.8} dot={false} />
-                  <Line type="monotone" dataKey="frictionCost" stroke="#7484e8" strokeWidth={1.8} dot={false} />
+                  <Area isAnimationActive={false} type="monotone" dataKey="totalCost" stroke="#0d9667" strokeWidth={2.5} fill="url(#costFill)" />
+                  <Line isAnimationActive={false} type="monotone" dataKey="missedLoss" stroke="#d9961a" strokeWidth={1.8} dot={false} />
+                  <Line isAnimationActive={false} type="monotone" dataKey="frictionCost" stroke="#7484e8" strokeWidth={1.8} dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
               <div className="selected-marker" style={{ left: selectedX }}><span>Selected</span><i /></div>
-              <div className="optimal-marker" style={{ left: `${optimum.threshold * 100}%` }}><CheckCircle2 size={14} /><span>Cost minimum<br /><b>{optimum.threshold.toFixed(2)}</b></span></div>
+              <div className="optimal-marker" style={{ left: `${policy.threshold * 100}%` }}><CheckCircle2 size={14} /><span>Selection policy<br /><b>{policy.threshold.toFixed(2)}</b></span></div>
             </div>
           </section>
 
+          <details className="evaluation-evidence" id="evidence">
+            <summary>Inspect reproducible evaluation evidence</summary>
+            <p>Study <code>{evaluation.study_id}</code>. {evaluation.methodology}</p>
+            <p>Dataset SHA-256: <code>{evaluation.dataset.sha256}</code>. <a href="/evaluation.json" download>Download study snapshot</a></p>
+            <div className="evidence-table-wrap"><table>
+              <caption>Test metrics at each model’s selection-window policy</caption>
+              <thead><tr><th scope="col">Model</th><th scope="col">ROC-AUC</th><th scope="col">Brier score ↓</th><th scope="col">False positive rate</th><th scope="col">Review workload</th><th scope="col">Estimated cost</th></tr></thead>
+              <tbody>{MODELS.map(model => <tr key={model.name}><th scope="row">{model.name}</th><td>{model.metrics.roc_auc.toFixed(3)}</td><td>{model.metrics.brier_score.toFixed(5)}</td><td>{(model.metrics.false_positive_rate * 100).toFixed(2)}%</td><td>{model.metrics.flagged} / {TOTAL_TRANSACTIONS}</td><td>{money.format(model.metrics.total_cost)}</td></tr>)}</tbody>
+            </table></div>
+            <h3>Measured calibration on the held-out test window</h3>
+            <p>Each nonempty probability bin reports its observed fraud fraction. A lower Brier score is better; this single synthetic study does not establish calibration on real transactions.</p>
+            {MODELS.map(model => <div className="evidence-table-wrap" key={model.name}><table><caption>{model.name}</caption><thead><tr><th scope="col">Probability bin</th><th scope="col">Rows</th><th scope="col">Mean predicted</th><th scope="col">Observed fraud</th></tr></thead><tbody>{model.metrics.calibration_curve.map(bin => <tr key={bin.lower}><th scope="row">{bin.lower.toFixed(1)}–{bin.upper.toFixed(1)}</th><td>{bin.count}</td><td>{(bin.mean_probability * 100).toFixed(2)}%</td><td>{(bin.observed_fraction * 100).toFixed(2)}%</td></tr>)}</tbody></table></div>)}
+            <ul>{evaluation.limitations.map(limit => <li key={limit}>{limit}</li>)}</ul>
+          </details>
+
           <section id="transactions" className="product-section">
             <div className="section-heading-row">
-              <div><span className="section-kicker">Investigate</span><h2>Transaction explorer</h2><p>Inspect model decisions and translate technical signals into business-readable evidence.</p></div>
-              <div className="section-stat"><span>Flagged at {threshold.toFixed(2)}</span><strong>{integer.format(current.flagged)}</strong><small>of {integer.format(TOTAL_TRANSACTIONS)} simulated transactions</small></div>
+              <div><span className="section-kicker">Illustrative scenarios</span><h2>Authored transaction examples</h2><p>These eight fictional examples and contributions are authored, not model predictions or SHAP. They are separate from the evaluated test window above.</p></div>
             </div>
             <article className="panel explorer-panel">
               <div className="table-toolbar">
@@ -396,7 +409,7 @@ export default function FraudLensDashboard() {
                 </div>
                 <span className="result-count">{filteredTransactions.length} shown</span>
               </div>
-              <div className="transaction-table-wrap">
+              <div className="transaction-table-wrap" tabIndex={0} role="region" aria-label="Authored transaction table, scroll horizontally for all columns">
                 <table className="transaction-table">
                   <thead><tr><th>Transaction</th><th>Merchant</th><th>Amount</th><th>Risk score</th><th>Decision</th><th>Actual</th><th><span className="sr-only">Open explanation</span></th></tr></thead>
                   <tbody>
@@ -420,8 +433,8 @@ export default function FraudLensDashboard() {
 
           <section id="models" className="product-section">
             <div className="section-heading-row">
-              <div><span className="section-kicker">Validate</span><h2>Model comparison</h2><p>Recorded Python evaluation on synthetic data: 52,500 training, 11,250 validation, and 11,250 test transactions.</p></div>
-              <div className="validation-chip"><CheckCircle2 size={15} /><div><strong>No temporal leakage</strong><small>Train → validation → test</small></div></div>
+              <div><span className="section-kicker">Validate</span><h2>Model comparison</h2><p>Fixed study: 45,000 train → 11,250 calibration → 7,500 policy selection → 11,250 test. Each model uses its own selection-cost threshold.</p></div>
+              <div className="validation-chip"><CheckCircle2 size={15} /><div><strong>Four disjoint windows</strong><small>Test never selects policy</small></div></div>
             </div>
             <div className="model-grid">
               <article className="panel model-table-panel">
@@ -429,26 +442,25 @@ export default function FraudLensDashboard() {
                 <div className="model-table-wrap">
                   <table className="model-table">
                     <thead><tr><th>Model</th><th>Precision</th><th>Recall</th><th>F1</th><th>PR-AUC</th></tr></thead>
-                    <tbody>{MODELS.map((model) => <tr key={model.name} className={model.best ? "best" : ""}>
-                      <td><div className="model-name"><span className={model.best ? "champion" : ""}>{model.name === "XGBoost" ? <Sparkles size={14} /> : <BrainCircuit size={14} />}</span><div><strong>{model.name}</strong><small>{model.version}{model.best ? " · Champion" : ""}</small></div></div></td>
-                      <td>{(model.precision * 100).toFixed(1)}%</td><td>{(model.recall * 100).toFixed(1)}%</td><td>{(model.f1 * 100).toFixed(1)}%</td><td><strong>{model.prAuc.toFixed(3)}</strong></td>
+                    <tbody>{MODELS.map((model) => <tr key={model.name}>
+                      <td><div className="model-name"><span><BrainCircuit size={14} /></span><div><strong>{model.name}</strong><small>Policy threshold {model.selected_threshold.toFixed(2)}</small></div></div></td>
+                      <td>{(model.metrics.precision * 100).toFixed(1)}%</td><td>{(model.metrics.recall * 100).toFixed(1)}%</td><td>{(model.metrics.f1 * 100).toFixed(1)}%</td><td><strong>{model.metrics.pr_auc.toFixed(3)}</strong></td>
                     </tr>)}</tbody>
                   </table>
                 </div>
-                <div className="model-note"><ShieldCheck size={15} /><span>Recorded synthetic-data F1: <strong>0.330 for XGBoost versus 0.229 for logistic regression</strong>. These results do not establish real-world fraud-detection performance.</span></div>
+                <div className="model-note"><ShieldCheck size={15} /><span>PR-AUC is average precision; test fraud prevalence is {(FRAUD_TRANSACTIONS / TOTAL_TRANSACTIONS * 100).toFixed(2)}%. No test-based champion is selected. Synthetic results do not establish real-world fraud detection performance.</span></div>
               </article>
               <article className="panel pr-panel">
-                <div className="mini-heading"><div><span className="section-label">Imbalanced evaluation</span><h3>Illustrative precision–recall curves</h3></div><span className="pr-score">Illustrative points</span></div>
+                <div className="mini-heading"><div><span className="section-label">Imbalanced evaluation</span><h3>Held-out precision–recall curves</h3></div><span className="pr-score">Actual sampled curve points</span></div>
                 <div className="pr-chart">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={PR_CURVE} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-                      <defs><linearGradient id="prFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#129668" stopOpacity={.18}/><stop offset="100%" stopColor="#129668" stopOpacity={0}/></linearGradient></defs>
+                    <ScatterChart margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
                       <CartesianGrid stroke="#e9edea" strokeDasharray="4 4" />
-                      <XAxis dataKey="recall" domain={[0, 1]} tickFormatter={(value) => `${Math.round(Number(value) * 100)}%`} tick={{ fill: "#849089", fontSize: 9 }} axisLine={false} tickLine={false} />
-                      <YAxis domain={[0, 1]} tickFormatter={(value) => `${Math.round(Number(value) * 100)}%`} tick={{ fill: "#849089", fontSize: 9 }} axisLine={false} tickLine={false} />
-                      <Area type="monotone" dataKey="xgboost" name="XGBoost" stroke="#119668" fill="url(#prFill)" strokeWidth={2.3} />
-                      <Line type="monotone" dataKey="logistic" name="Logistic Regression" stroke="#87949f" strokeDasharray="5 4" strokeWidth={1.6} dot={false} />
-                    </AreaChart>
+                      <XAxis type="number" dataKey="recall" domain={[0, 1]} tickFormatter={(value) => `${Math.round(Number(value) * 100)}%`} tick={{ fill: "#849089", fontSize: 12 }} axisLine={false} tickLine={false} />
+                      <YAxis type="number" dataKey="precision" domain={[0, 1]} tickFormatter={(value) => `${Math.round(Number(value) * 100)}%`} tick={{ fill: "#849089", fontSize: 12 }} axisLine={false} tickLine={false} />
+                      <Scatter isAnimationActive={false} data={evaluation.models.xgboost.metrics.pr_curve} name="XGBoost" line fill="#119668" />
+                      <Scatter isAnimationActive={false} data={evaluation.models.logistic_regression.metrics.pr_curve} name="Logistic Regression" line fill="#87949f" />
+                    </ScatterChart>
                   </ResponsiveContainer>
                 </div>
                 <div className="pr-legend"><span><i />XGBoost</span><span><i />Logistic Regression</span><small>Recall →</small></div>
@@ -458,20 +470,19 @@ export default function FraudLensDashboard() {
 
           <section id="attacks" className="product-section attack-section">
             <div className="section-heading-row">
-              <div><span className="section-kicker">Stress test</span><h2>Attack pattern lab</h2><p>Inject explainable fraud scenarios and test whether the current strategy catches them.</p></div>
-              <div className="threshold-context"><Gauge size={15} /><span>Testing at <strong>{threshold.toFixed(2)}</strong> threshold</span></div>
+              <div><span className="section-kicker">Authored scenarios</span><h2>Attack pattern lab</h2><p>Compare fictional, authored risk scores against a threshold. These are not model inferences or security attack executions.</p></div>
+              <div className="threshold-context"><Gauge size={15} /><span>Compare at <strong>{threshold.toFixed(2)}</strong> threshold</span></div>
             </div>
             <div className="attack-grid">
               {ATTACKS.map((attack) => {
                 const Icon = attack.icon;
                 const run = attackRuns[attack.id];
-                const isRunning = runningAttack === attack.id;
                 return <article key={attack.id} className={`attack-card ${run ? (run.detected ? "detected" : "missed") : ""}`}>
-                  <div className="attack-top"><div className="attack-icon"><Icon size={18} /></div>{run && <span className={`run-result ${run.detected ? "detected" : "missed"}`}>{run.detected ? <><CheckCircle2 size={12} />Detected</> : <><ShieldAlert size={12} />Missed</>}</span>}</div>
+                  <div className="attack-top"><div className="attack-icon"><Icon size={18} /></div>{run && <span className={`run-result ${run.detected ? "detected" : "missed"}`}>{run.detected ? <CheckCircle2 size={12} /> : <ShieldAlert size={12} />}{run.detected ? "Flagged" : "Unflagged"} at {run.threshold.toFixed(2)}</span>}</div>
                   <h3>{attack.name}</h3><p>{attack.description}</p>
                   <div className="signal-row"><Activity size={13} /><span>{attack.signal}</span></div>
-                  <div className="attack-score"><span>Simulated risk</span><strong>{(attack.probability * 100).toFixed(0)}%</strong></div>
-                  <button onClick={() => runAttack(attack)} disabled={isRunning}>{isRunning ? <><RefreshCw className="spin" size={14} />Running…</> : run ? <><RefreshCw size={14} />Run again</> : <><Play size={14} fill="currentColor" />Inject attack</>}</button>
+                  <div className="attack-score"><span>Authored example score</span><strong>{(attack.probability * 100).toFixed(0)}%</strong></div>
+                  <button onClick={() => runAttack(attack)}><Play size={14} />Evaluate example</button>
                 </article>;
               })}
             </div>
@@ -479,11 +490,11 @@ export default function FraudLensDashboard() {
 
           <section id="data" className="data-provenance">
             <div className="provenance-icon"><Database size={22} /></div>
-            <div><span>Data provenance</span><strong>Synthetic data, reproducible evaluation, interactive simulations.</strong><p>The Python study uses 75,000 synthetic transactions. Browser strategy curves, transaction examples, and attack scenarios are illustrative. A real-data benchmark downloader is implemented; no completed benchmark run is claimed.</p></div>
-            <div className="provenance-metrics"><div><strong>75,000</strong><span>synthetic study rows</span></div><div><strong>1.10%</strong><span>strategy-set fraud rate</span></div><div><strong>12</strong><span>readable features</span></div></div>
+            <div><span>Data provenance</span><strong>Trained synthetic study, precomputed evidence.</strong><p>Model metrics and threshold curves come from actual held-out scores. Transaction examples and attack scenarios are authored separately. No completed real-data benchmark run is claimed.</p></div>
+            <div className="provenance-metrics"><div><strong>{integer.format(TOTAL_TRANSACTIONS)}</strong><span>test-window rows</span></div><div><strong>{(FRAUD_TRANSACTIONS / TOTAL_TRANSACTIONS * 100).toFixed(2)}%</strong><span>test fraud prevalence</span></div><div><strong>4</strong><span>disjoint windows</span></div></div>
           </section>
 
-          <footer><div className="brand footer-brand"><div className="brand-mark"><ShieldCheck size={18} /></div><div><strong>FraudLens</strong><span>Explainable fraud strategy intelligence</span></div></div><p>Portfolio project by Poojan Desai. Recorded synthetic model metrics; illustrative browser simulations.</p><a href="#strategy">Back to simulator <ArrowUpRight size={13} /></a></footer>
+          <footer><div className="brand footer-brand"><div className="brand-mark"><ShieldCheck size={18} /></div><div><strong>FraudLens</strong><span>Explainable fraud strategy intelligence</span></div></div><p>Portfolio project by Poojan Desai. Precomputed test evidence; authored transaction and attack examples.</p><a href="#strategy">Back to simulator <ArrowUpRight size={13} /></a></footer>
         </div>
       </main>
 
