@@ -22,9 +22,10 @@ class ScoredTransaction(BaseModel):
 
 
 class SimulationRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
     threshold: float = Field(default=0.42, ge=0.01, le=0.99)
     assumptions: StrategyAssumptions = Field(default_factory=StrategyAssumptions)
-    transactions: list[ScoredTransaction] = Field(min_length=1)
+    transactions: list[ScoredTransaction] = Field(min_length=1, max_length=100_000)
 
 
 class SimulationResponse(BaseModel):

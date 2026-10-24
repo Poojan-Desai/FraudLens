@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "study_id": "bf01d1c0ac627559",
+  "study_id": "7287a6f8b6ef04ba",
   "dataset": {
     "version": "synthetic_strategy_v1",
     "sha256": "765c93dd16dfbeec29d68ccde2a0baef7be78d573902fa016f9e2ddce9def0ba",
@@ -42,11 +42,12 @@
       "joblib": "1.5.1"
     },
     "source_sha256": {
-      "backend/app/ml/experiment.py": "d299a81eb19c0fb6ebf6fcba9a6ba251ebc91a7d168b73c08cb7bbca9d380c26",
+      "backend/app/ml/experiment.py": "3dc1fe0487d595c20c27df80755c0eb745887e8886ae0bfc9cdb11adb47cef01",
       "backend/app/ml/train.py": "97b6f60c2c43379fb87091f2c58ebeabe4ef1912cd9f4e19f932e87234bfcced",
       "backend/app/ml/synthetic.py": "69b8816f72592bfe4799a6c196cdfa6c4ddb0fcbfd792a0a615363730a92a068",
-      "backend/app/ml/validation.py": "da9acd903e64d5f7585da3fc0e93d99de13bf02bfa9c3abe141bbf8f1621da35",
-      "backend/app/schemas.py": "6437a78dcc649930b9d4cf8e98fc116f245652474ed601361e8a21cf24dba9c6",
+      "backend/app/ml/validation.py": "c9f6f508a69529282215a00e3de3defc1d1663cc0a3d906b34c0d19213320b04",
+      "backend/app/ml/manifest.py": "f6cfea9480f5fd0568c1bf35ee353ac47a050f9a34450a9bec4b843439895118",
+      "backend/app/schemas.py": "0a29cb2eba33efe0fc675a3e6360f518ecccb39da86bcdfb785f002d1a13deba",
       "backend/app/services/money.py": "3d3c4f987abe57ab43978fd9e5f6191334ca0904326bebe6d0f32c2c68b19f9d"
     }
   },
@@ -9424,5 +9425,55 @@
     "Review capacity applies to the entire displayed evaluation window, not a daily arrival rate.",
     "Single seeded split; no uncertainty intervals or cross-environment bitwise reproducibility claim."
   ],
+  "baselines": {
+    "train_prevalence": {
+      "description": "Constant probability fitted only from training-label prevalence; same selection-only cost policy.",
+      "probability": 0.011133333333333334,
+      "selected_threshold": 0.99,
+      "metrics": {
+        "threshold": 0.99,
+        "true_positives": 0,
+        "false_positives": 0,
+        "true_negatives": 11122,
+        "false_negatives": 128,
+        "flagged": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "false_positive_rate": 0.0,
+        "review_workload": 0.0,
+        "fraud_detected": 0.0,
+        "fraud_missed": 10351.55,
+        "missed_loss": 6728.51,
+        "friction_cost": 0.0,
+        "review_cost": 0.0,
+        "capacity_overflow_cost": 0.0,
+        "total_cost": 6728.51,
+        "pr_auc": 0.011377777777777778,
+        "pr_auc_definition": "average_precision_score (step-weighted precision)",
+        "roc_auc": 0.5,
+        "brier_score": 0.011248383703703702,
+        "calibration_curve": [
+          {
+            "lower": 0.0,
+            "upper": 0.1,
+            "count": 11250,
+            "mean_probability": 0.01113333333333333,
+            "observed_fraction": 0.011377777777777778
+          }
+        ],
+        "pr_curve": [
+          {
+            "recall": 0.0,
+            "precision": 1.0
+          },
+          {
+            "recall": 1.0,
+            "precision": 0.011377777777777778
+          }
+        ]
+      }
+    }
+  },
   "predictions_sha256": "4092f56b2c37af9055633bc1d4c8e608c2b4bc4d39b67fc8f54524bdbc91b9a0"
 }

@@ -1,201 +1,211 @@
-> **Netlify deployment:** [https://fraudlens-poojan-desai.netlify.app](https://fraudlens-poojan-desai.netlify.app). See [NETLIFY.md](NETLIFY.md) for the current hosting commands; older Sites-specific instructions below are historical.
-
 # FraudLens
 
-FraudLens is an explainable credit-card fraud strategy simulator. It goes beyond ranking transactions: it helps an analyst choose a decision threshold that balances missed fraud, false-positive customer friction, manual-review expense, and review-team capacity.
+FraudLens is a local fraud investigation and model-evaluation demonstration using
+**synthetic financial transactions**. It connects reproducible calibrated model
+scores to analyst review, concurrency-safe decisions and verifiable action history.
+I built it to explore how fraud decisions combine statistical uncertainty,
+illustrative operating costs and accountable human review.
 
-The project is designed for Credit & Fraud Risk internship interviews. Its central question is not “Which model has the highest accuracy?” but “Which decision policy minimizes financial damage while remaining explainable and operationally feasible?”
+![Actual local investigation workflow](docs/screenshots/investigations.png)
 
-## What is working
+The existing [hosted strategy snapshot](https://fraudlens-poojan-desai.netlify.app)
+is static. The new case workflow runs against a local Python API; these changes
+have not been pushed, deployed or published.
 
-- Browser threshold and cost analysis from **actual trained-model probabilities on 11,250 held-out synthetic transactions**, exported as a small precomputed study snapshot
-- Separate, disjoint train / probability-calibration / cost-policy-selection / test windows; test results never choose a policy or model champion
-- Calibrated Logistic Regression and XGBoost; precision, recall, F1, average precision, ROC-AUC, confusion matrix, false-positive rate, review workload, Brier score, calibration bins and threshold-dependent business cost
-- Explicit cost assumptions, selection-only policy button, downloadable evidence and real precision–recall curve points
-- Eight searchable authored transaction examples and six instant authored attack comparisons, labeled separately from model evaluation
-- Deterministic synthetic generator; dataset/config/source hashes, actual model parameters and package versions, immutable artifact directories and prediction CSVs
-- Local FastAPI strategy-cost API and SQLAlchemy schema; no hosted Python/model inference service is implied by the static demo
-- Backend/frontend regression tests and local production build; CI workflow added (not yet run remotely)
+## Capabilities and boundaries
+
+- Four disjoint chronological windows: 45,000 training / 11,250 calibration /
+  7,500 policy selection / 11,250 locked test transactions.
+- Train-only preprocessing and model fitting, separate sigmoid calibration,
+  selection-only cost policy, and a train-prevalence probability comparator.
+- Versioned dataset manifest with checksums, generator seed/schema, feature
+  definitions, distributions, missingness and explicit realism limitations.
+- Import saved flagged predictions after evidence verification and regeneration
+  of the matching dataset. No executable model is loaded during demo import.
+- Search/filter cases, inspect score/threshold/features, add notes, review and
+  resolve cases, inspect actor history and export a report with notes/actors removed.
+- Viewer, analyst and administrator access; conditional version updates reject
+  stale writes. Each successful write and its hash-linked event commit together.
+- SQLite triggers reject event updates/deletes. Reads/writes/export verify the
+  snapshot hash, event chain, final state and version before using case evidence.
+- Human decisions are **not ground-truth labels** and never feed model training.
+
+This is a portfolio simulation, not a bank authorization service, regulatory
+certification or production identity system. The strategy simulator remains a
+binary flag/approve study; a three-way approve/review/block policy is not implemented.
+Observed case signals are feature descriptions, not local SHAP or causal explanations.
 
 ## Architecture
 
 ```mermaid
 flowchart TD
-    S[Original synthetic generator] --> T[Train-only preprocessing and models]
-    T --> C[Separate calibration window]
-    C --> P[Separate cost-policy selection window]
-    P --> E[Held-out test evaluation]
-    E --> A[Versioned report, model bundles, prediction CSV]
-    A --> UI[Static browser evidence snapshot]
-    R[Caller-supplied scored transactions] --> API[Local FastAPI cost calculator]
+    G[Seeded synthetic generator] --> Q[Schema checks and dataset manifest]
+    Q --> T[Train-only preprocessing and model fit]
+    T --> C[Separate probability calibration]
+    C --> P[Separate policy selection]
+    P --> E[Locked test evaluation + prevalence comparator]
+    E --> A[Checksummed report and saved predictions]
+    A --> D[Static analytical dashboard]
+    A --> V[Verifier + regenerated dataset checksum]
+    V --> I[Immutable scored case snapshots]
+    B[Local investigation browser] --> R[Bearer identity + role checks]
+    R --> S[FastAPI case state machine + version check]
+    S --> I
+    S --> J[SQLite append-only hash-linked journal]
+    I --> X[Redacted report export]
+    J --> X
 ```
 
-The SQLite tables are a storage foundation; no browser-to-database review workflow is implied. The real benchmark has a separate download/schema-validation helper, not a completed experiment in this slice.
+React/Next.js provides a static dashboard and investigation page. FastAPI,
+SQLAlchemy and SQLite implement the local case store. scikit-learn and XGBoost
+implement the study. The static site contains neither API credentials nor models.
 
+## Run and reproduce
 
-## Data design
-
-The two datasets have different jobs:
-
-1. **Real benchmark download path** can obtain and validate a standard imbalanced fraud benchmark; no completed benchmark training result is claimed. The `V1`–`V28` fields are anonymized, so they are not ideal for recruiter-facing explanations.
-2. **Synthetic strategy data** is clearly labeled as simulated and includes readable fields: amount, merchant category, country, distance from home, transaction velocity, average 30-day amount, amount ratio, device status, card-present status, account age, international status, and prior declines.
-
-Raw data, generated CSVs, database files, and trained model artifacts are intentionally excluded from Git. They are reproducible with the included scripts.
-
-## Current reproducible study
-
-Configuration: [`configs/synthetic-v2.json`](configs/synthetic-v2.json). The original generator creates 75,000 synthetic transactions with seed 42 (823 fraud labels). Strict chronological windows are **45,000 train / 11,250 calibration / 7,500 policy selection / 11,250 test**. Each window contains both classes; duplicate or missing timestamps fail closed. The generator is stationary, so chronology alone does not demonstrate real-world temporal generalization.
-
-Both models fit preprocessing and model weights only on train, then fit a sigmoid calibrator only on calibration. Hyperparameters are fixed in advance. Each threshold minimizes the configured financial cost on **selection only** over 0.01–0.99; costs round to cents (half upward, tiny summation tolerance), and ties prefer the higher threshold. Test is used only for final metrics and clearly labeled sensitivity exploration. Changing browser costs recalculates the policy from selection aggregates, never a test optimum.
-
-Local run on Apple M3 Pro/macOS 14.4, Python 3.13.1:
-
-| Model | Selection threshold | Test precision | Test recall | Test F1 | Test AP | Test ROC-AUC | Brier score | Test-window cost |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Calibrated XGBoost | 0.18 | 62.96% | 13.28% | 0.21935 | 0.24078 | 0.83140 | 0.01027 | $6,108.56 |
-| Calibrated Logistic Regression | 0.32 | 54.55% | 9.38% | 0.16000 | 0.21135 | 0.85695 | 0.00998 | $6,489.69 |
-
-“PR-AUC” in the interface means sklearn **average precision**, not trapezoidal integration. Test prevalence is 128/11,250 = 1.14%; accuracy alone would conceal missed fraud. Lower Brier scores are better. The models trade off ranking, calibration and cost; no overall champion is declared using test data. Historical three-window figures were replaced because they did not reproduce exactly with current source/dependencies, and because the prior script selected F1 rather than its documented cost objective.
-
-The current study snapshot is [`public/evaluation.json`](public/evaluation.json). Two full runs on the same environment produced identical snapshot and prediction CSV bytes. Run identity includes dataset, configuration, Python/package/platform and training-source fingerprints; changing these creates a different study directory. Timings and serialized model hashes are recorded in the local report, excluded from the deterministic browser snapshot. No cross-environment bitwise guarantee, uncertainty interval or real-payment benchmark result is claimed.
-
-## Repository layout
-
-```text
-fraudlens/
-├── app/                     # React/Next.js static dashboard
-├── lib/strategy.ts          # Browser strategy-cost engine
-├── backend/
-│   ├── app/
-│   │   ├── ml/              # generation, validation, training, SHAP formatting
-│   │   ├── services/        # financial decision engine
-│   │   ├── database.py      # SQLAlchemy session
-│   │   ├── models.py        # SQLite tables
-│   │   └── main.py          # FastAPI endpoints
-│   ├── tests/
-│   └── requirements.txt
-├── data/                    # raw, processed, and synthetic placeholders
-├── artifacts/               # generated joblib models and metrics
-├── scripts/                 # dataset and training commands
-├── tests/                   # frontend strategy and rendered-page tests
-├── PROJECT_STATUS.md
-└── docker-compose.yml
-```
-
-## Run locally
-
-### Dashboard
+Node 22+, Python 3.13, and Google Chrome are used for local verification. The
+backend requirements are pinned; JavaScript dependencies use `package-lock.json`.
 
 ```bash
-npm install
-npm run dev
-```
-
-### FastAPI and SQLite
-
-```bash
-python -m venv .venv
+npm ci
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r backend/requirements.txt
-uvicorn backend.app.main:app --reload --port 8000
-```
-
-OpenAPI documentation is available at `http://localhost:8000/docs`.
-
-### Generate data and train models
-
-```bash
-PYTHONPATH=. python scripts/generate_synthetic.py
-PYTHONPATH=. python scripts/run_experiment.py --snapshot public/evaluation.json
-```
-
-Full evidence and model bundles are written under `artifacts/runs/<study-id>/`: `report.json`, `config.json`, `test_predictions.csv`, `logistic_regression.joblib`, and `xgboost.joblib`. Existing run directories are immutable; use another output directory for a deliberate repeat:
-
-```bash
-PYTHONPATH=. python scripts/run_experiment.py --output artifacts/repeat --snapshot work/evaluation-repeat.json
-cmp public/evaluation.json work/evaluation-repeat.json
-```
-
-Verify a saved study before using its reported results:
-
-```bash
+PYTHONPATH=. python scripts/run_experiment.py --output artifacts/runs --snapshot public/evaluation.json
 PYTHONPATH=. python scripts/verify_experiment.py artifacts/runs/<study-id>
-```
-
-The verifier checks configuration, prediction and model-file hashes, study identity,
-test row counts, timestamps and probability bounds, then recomputes reported
-held-out metrics and all 99 test-threshold curve points from the prediction CSV.
-It never loads executable model pickles.
-These unsigned hashes detect accidental corruption; they do not establish who
-created a report, validate raw source data, or rerun calibration/policy selection.
-CI now includes saved-study verification after training; this workflow change has
-not run remotely.
-
-The old `scripts/train_models.py` remains a **legacy three-window F1 study** and does not generate the browser snapshot. Do not mix its artifacts or thresholds with the four-window study.
-
-To download the real benchmark through OpenML data ID `1597`:
-
-```bash
-PYTHONPATH=. python scripts/download_real_dataset.py
-```
-
-The download script validates all `V1`–`V28`, `Time`, `Amount`, and binary `Class` fields before writing `data/raw/creditcard.csv`.
-
-## Test and verify
-
-```bash
-npm test
-PYTHONPATH=. pytest -q backend/tests
-npm run lint
-```
-
-For repeatable browser checks, install Google Chrome, build the app, and serve the exported `out` directory on port 4176. In another terminal:
-
-```bash
+npm run build
 python3 -m http.server 4176 --bind 127.0.0.1 --directory out
-# In a second terminal:
+```
+
+Open `http://127.0.0.1:4176`. An existing run directory is immutable: use another
+output directory to repeat an experiment. `configs/synthetic-v2.json` contains the
+fixed experiment configuration. The legacy `train_models.py` is a different
+three-window F1 study and must not be mixed with this four-window cost study.
+
+### Complete investigation demonstration
+
+After producing a verified study, in a second terminal:
+
+```bash
+source .venv/bin/activate
+PYTHONPATH=. python scripts/prepare_investigation_demo.py artifacts/runs/<study-id>
+source work/investigation-demo/environment.sh
+uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
+```
+
+The command seeds up to 12 highest-scoring flagged test transactions, preserves
+existing cases on repeat, and creates ignored mode-0600 local credentials. It
+checks complete regenerated dataset bytes against the study checksum before
+joining transaction features to predictions. It never copies ground-truth labels.
+
+In a terminal with the environment sourced, display your local token with
+`echo "$FRAUDLENS_DEMO_ANALYST_TOKEN"`; paste it at
+`http://127.0.0.1:4176/investigations/`. Tokens stay in page memory and disappear on
+reload/disconnect. Never publish the environment file or runtime database.
+
+1. Select a pending case and inspect its preserved score and selection threshold.
+2. Add a note, mark it reviewed, then mark it legitimate or confirmed fraud.
+3. Inspect the action history and download the sanitized JSON report.
+4. Open the same case in two browser windows; submit a note in one and then a
+   stale decision in the other. The stale write is rejected; reload preserves the
+   unsaved note so the analyst can reconcile the new history.
+5. Analyst resolutions are terminal; an administrator can reopen a resolved case
+   to reviewed with a required note. Viewers can read but cannot write or export.
+
+OpenAPI: `http://127.0.0.1:8000/docs`. Without valid `FRAUDLENS_CASE_TOKENS`, every
+case endpoint returns 503. Unauthenticated requests return 401 when configured.
+`FRAUDLENS_DATABASE_URL` selects the store. `FRAUDLENS_CASE_ORIGINS` lists allowed
+browser origins (default: local ports 3000 and 4176); use an explicit matching
+origin if serving on another local port. No wildcard credentialed CORS is used.
+
+An administrator may POST an explicitly `caller_supplied_simulation` scored
+snapshot; only the verified local import command may assign verified-study
+provenance. Duplicate transaction IDs are rejected rather than silently replaced.
+
+## Verified study results
+
+Study `7287a6f8b6ef04ba`, 75,000 rows, seed 42, 823 synthetic fraud labels.
+The locked test window has 128 positives / 11,250 rows (1.1378%).
+
+| Model | Selection threshold | Test precision | Test recall | Average precision | ROC-AUC | Brier | Illustrative test-window cost |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Train-prevalence constant | 0.99 | 0% | 0% | 0.01138 | 0.50000 | 0.01125 | $6,728.51 |
+| Calibrated logistic regression | 0.32 | 54.55% | 9.38% | 0.21135 | 0.85695 | 0.00998 | $6,489.69 |
+| Calibrated XGBoost | 0.18 | 62.96% | 13.28% | 0.24078 | 0.83140 | 0.01027 | $6,108.56 |
+
+The selected policies capture a small fraction of labeled fraud. Logistic
+regression has better Brier/ROC-AUC; XGBoost has better average precision and the
+lower illustrative cost in this test. No model champion is selected using test
+results. Costs are configured assumptions, not actual bank losses. The constant
+baseline selects no flags; 0.99 is the documented higher-threshold tie break.
+
+Two fresh full runs produced byte-identical public snapshots and prediction CSVs
+on this machine. This is not a cross-environment bitwise guarantee. `PR-AUC` in
+the UI means sklearn average precision, not trapezoidal integration. See the
+[model card](docs/MODEL_CARD.md) and [verification report](docs/VERIFICATION.md).
+
+The unchanged generator uses a hand-written stationary risk process. It has no
+persistent account entities; velocity and account-history inputs are sampled,
+not reconstructed. Models can learn those synthetic rules. These results do not
+establish real-world fraud performance. The real benchmark download/schema helper
+exists; no completed real-payment benchmark is claimed.
+
+## Test
+
+```bash
+PYTHONPATH=. python -m pytest -q backend/tests
+npm run test:unit
+npm run lint
+npm run build
 npm run test:browser
+# API + static server running, demo environment sourced:
+npm run test:investigations
 ```
 
-The browser script uses an isolated headless Chrome profile through pinned `playwright-core`, verifies 320/390/768/1440px layouts and core interactions, and writes screenshots/results to ignored `work/browser-check/`. Override `FRAUDLENS_BROWSER_URL`, `FRAUDLENS_BROWSER_EXECUTABLE` or `FRAUDLENS_BROWSER_OUTPUT` when needed. It neither uses the user’s signed-in browser profile nor downloads a browser automatically.
+October 24 local evidence: **60 backend tests, seven frontend unit tests, 83 existing
+strategy browser checks and 27 investigation browser checks** passed, plus lint,
+TypeScript and production build. Browser verification uses isolated headless
+Chrome profiles and actual API/database writes, including two-page stale conflicts.
 
-Tests cover bounded probabilities, threshold monotonicity, financial cost calculations, attack responses, API validation, deterministic generation, chronological splitting, schema validation, and explanation formatting.
+The backend tests include simultaneous real SQLite writers, atomic rollback when
+journal insertion fails, invalid transitions, role separation, missing credentials,
+duplicate IDs, audit tamper detection, export redaction, literal SQL search,
+missing/invalid dataset fields, label isolation, baseline consistency, corrupt
+artifacts and trusted-model serialization/reload parity. CI runs backend/unit/build
+checks without secrets; no remote CI execution is claimed.
 
-October 24 local verification: 32 backend tests and seven frontend tests passed,
-along with lint and the static production build. Added regressions detect modified
-prediction/config/model files, altered report metrics, nonfinite API amounts, and
-half-cent API/study rounding disagreement. Total costs now use the same documented
-half-up cent rule in the API, experiment and browser.
+## Security and tradeoffs
 
-## Cost engine
+Read the [threat model](docs/THREAT_MODEL.md). Case routes require configured
+high-entropy tokens and authorize roles on the server. Bind the demonstration to
+loopback. Static tokens have no expiration/MFA/central identity provider and are
+unsuitable for an exposed production service. SQL uses parameterized statements;
+notes render as text. Export omits notes and actors but retains transaction
+identifiers and score/feature evidence; use only synthetic input.
 
-```text
-missed fraud loss = false-negative dollars × (1 − recovery rate)
-false-positive cost = legitimate declines × (decline cost + friction cost)
-review cost = min(flagged transactions, review capacity) × manual review cost
-total strategy cost = missed fraud loss + false-positive cost + review cost + capacity overflow
-```
+Audit hashes are unsigned. A database owner could disable triggers and recompute
+all hashes; this is not a cryptographically authenticated external audit ledger.
+Redacted exports preserve original event hashes but cannot independently recreate
+them from their redacted event text. Full verification remains local.
 
-This is a portfolio simulation, not a production authorization system. Synthetic transactions are labeled in the interface, explanations describe model behavior rather than causation, and no payment-card data is collected.
+Model bundles use executable joblib serialization. Only locally produced trusted
+bundles are used; API/demo import and report verification never deserialize them.
+Checksum verification detects corruption, not publisher authenticity. The registry
+is a filesystem study record, not a deployed model-serving registry.
 
-## Demonstration
+Next and its ESLint configuration were updated to 16.4.3 after the current audit
+identified critical advisories in the baseline 16.3.8. The final npm audit has
+**13 development/build findings: nine high, four moderate; zero critical**. Many involve
+inherited build/deployment tooling. This debt is unresolved; no general security
+certification or complete dependency remediation is claimed.
 
-1. Read the held-out synthetic-study and selection-window disclosures.
-2. Move the threshold and inspect the actual test confusion matrix and cost changes.
-3. Change cost assumptions, then apply the policy chosen on the separate selection window.
-4. Open **Inspect reproducible evaluation evidence** for calibration bins, additional metrics, limitations, study hashes and JSON download.
-5. Inspect an authored transaction or evaluate an authored attack example. These are explicitly separate from actual model prediction/SHAP evidence.
+## Remaining work
 
-## Remaining boundaries
+Three-way decision policy, a single shared cross-language cost implementation,
+local calibrated-model explanations, real-data benchmarking, live drift/latency
+monitoring, controlled human-label adjudication and production identity/rate
+limiting remain incomplete. There is no live inference service. Existing authored
+transaction/attack examples stay explicitly separated from measured model results.
 
-- The Netlify demo is static and precomputed. It does not run training or serve live model inference.
-- Browser transaction details and attack scores remain authored. The Python Tree SHAP helper exists and was exercised locally, but raw-model log-odds contributions must not be presented as calibrated-probability explanations.
-- No persisted analyst review/notes workflow, monitoring run history, real-data benchmark, authentication, or production payment integration exists.
-- Review capacity applies to the whole shown evaluation window, not a daily rate; costs are assumptions, not observed operational losses.
-- Docker dashboard hostname/port configuration was corrected; a full container build/run remains unverified where Docker is unavailable.
-- The CI workflow is committed for review, but no remote workflow run is claimed before push authorization.
-- Next was upgraded from 16.2.6 to 16.3.8 and the critical advisory cleared. Dependency audit still reports 31 affected packages (22 high, eight moderate, one low), largely inherited tooling; this is unresolved security debt. Install-time audit notices are enabled.
-
-## Resume bullet
-
-**FraudLens — Explainable Fraud Strategy Simulator:** Built a full-stack fraud risk decision platform with Python, FastAPI, React, SQL, calibrated XGBoost, and Logistic Regression; developed time-based transaction pipelines, SHAP-ready explanations, and an interactive cost-optimization simulator quantifying missed-fraud loss, false-positive customer friction, and review capacity.
+See [audit and priorities](docs/ENGINEERING_AUDIT.md),
+[engineering decisions](docs/ENGINEERING_STORIES.md), and
+[exact commands/results](docs/VERIFICATION.md).

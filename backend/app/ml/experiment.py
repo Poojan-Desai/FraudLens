@@ -11,6 +11,7 @@ import json
 from pathlib import Path
 import platform
 import time
+from datetime import datetime, timezone
 from typing import Any
 
 import joblib
@@ -28,6 +29,7 @@ from ..services.money import round_cost
 from .synthetic import generate_transactions
 from .train import _preprocessor
 from .validation import validate_schema
+from .manifest import dataset_manifest
 
 FEATURES = [
     "amount", "merchant_category", "country", "distance_from_home",
@@ -142,6 +144,7 @@ def held_out_metrics(frame: pd.DataFrame, probabilities: np.ndarray, threshold: 
 
 
 def run_experiment(config: ExperimentConfig, output_dir: Path, snapshot_path: Path | None = None, frame: pd.DataFrame | None = None) -> dict[str, Any]:
+    generated_at = datetime.now(timezone.utc).isoformat() if frame is None else None
     frame = generate_transactions(config.row_count, config.seed) if frame is None else frame
     if len(frame) != config.row_count:
         raise ValueError("dataset row count does not match configuration")
@@ -150,7 +153,7 @@ def run_experiment(config: ExperimentConfig, output_dir: Path, snapshot_path: Pa
     dataset_hash = hashlib.sha256(dataset_bytes).hexdigest()
     config_hash = hashlib.sha256(canonical_json(config.model_dump(mode="json"))).hexdigest()
     repository = Path(__file__).resolve().parents[3]
-    source_files = ["backend/app/ml/experiment.py", "backend/app/ml/train.py", "backend/app/ml/synthetic.py", "backend/app/ml/validation.py", "backend/app/schemas.py", "backend/app/services/money.py"]
+    source_files = ["backend/app/ml/experiment.py", "backend/app/ml/train.py", "backend/app/ml/synthetic.py", "backend/app/ml/validation.py", "backend/app/ml/manifest.py", "backend/app/schemas.py", "backend/app/services/money.py"]
     provenance = {
         "python": platform.python_version(),
         "platform": platform.platform(), "machine": platform.machine(),
@@ -163,6 +166,8 @@ def run_experiment(config: ExperimentConfig, output_dir: Path, snapshot_path: Pa
     run_dir = output_dir / study_id
     # Runs are immutable. A deliberate repeat uses a different --output directory.
     run_dir.mkdir(parents=True, exist_ok=False)
+    manifest_bytes = json.dumps(dataset_manifest(frame, config.seed, dataset_hash, generated_at), indent=2, allow_nan=False).encode()
+    (run_dir / "dataset-manifest.json").write_bytes(manifest_bytes)
     predictions = test[["timestamp", "amount", "is_fraud"]].copy()
     predictions.insert(0, "transaction_id", [f"EVAL-{index:06d}" for index in test.index])
     from xgboost import XGBClassifier
@@ -173,6 +178,7 @@ def run_experiment(config: ExperimentConfig, output_dir: Path, snapshot_path: Pa
     }
     report: dict[str, Any] = {
         "schema_version": 2, "study_id": study_id,
+        "dataset_manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest(),
         "dataset": {"version": config.dataset_version, "sha256": dataset_hash, "rows": len(frame), "fraud_rows": int(frame.is_fraud.sum()), "source": "original synthetic generator; not real payment data"},
         "config_sha256": config_hash, "config": config.model_dump(mode="json"),
         "provenance": provenance,
@@ -183,6 +189,11 @@ def run_experiment(config: ExperimentConfig, output_dir: Path, snapshot_path: Pa
         "models": {},
         "limitations": ["Synthetic stationary risk process; chronological order does not establish real-world temporal generalization.", "No real-data benchmark, causal explanation, deployment monitoring or hiring/financial outcome guarantee.", "Calibration is measured on test; no calibration or policy tuning uses test labels.", "Test threshold curves are exploratory sensitivity analysis; deployable policy was fixed on selection.", "Review capacity applies to the entire displayed evaluation window, not a daily arrival rate.", "Single seeded split; no uncertainty intervals or cross-environment bitwise reproducibility claim."],
     }
+    prevalence = float(train.is_fraud.mean())
+    baseline_selected = select_policy(selection, np.full(len(selection), prevalence), config.assumptions)
+    report["baselines"] = {"train_prevalence": {"description": "Constant probability fitted only from training-label prevalence; same selection-only cost policy.",
+        "probability": prevalence, "selected_threshold": baseline_selected["threshold"],
+        "metrics": held_out_metrics(test, np.full(len(test), prevalence), baseline_selected["threshold"], config.assumptions)}}
     for name, estimator in models.items():
         pipeline = Pipeline([("preprocess", _preprocessor(FEATURES)), ("model", estimator)])
         started = time.perf_counter()
@@ -212,7 +223,7 @@ def run_experiment(config: ExperimentConfig, output_dir: Path, snapshot_path: Pa
     (run_dir / "report.json").write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
     if snapshot_path:
         # Public snapshot is deterministic: exclude machine timing and pickle hashes.
-        snapshot = {key: value for key, value in report.items() if key != "environment"}
+        snapshot = {key: value for key, value in report.items() if key not in {"environment", "dataset_manifest_sha256"}}
         snapshot["models"] = {name: {key: value for key, value in model.items() if key not in {"training_and_calibration_seconds", "artifact_sha256"}} for name, model in report["models"].items()}
         snapshot_path.parent.mkdir(parents=True, exist_ok=True)
         snapshot_path.write_text(json.dumps(snapshot, indent=2, allow_nan=False) + "\n")

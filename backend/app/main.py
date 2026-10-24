@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+import os
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from .database import Base, engine
 from .schemas import AttackResponse, SimulationRequest, SimulationResponse
 from .services.cost_engine import evaluate_strategy
+from .case_routes import router as case_router
 
 
 ATTACKS = {
@@ -31,6 +34,20 @@ app = FastAPI(
     description="Explainable fraud-strategy simulation API.",
     lifespan=lifespan,
 )
+
+app.add_middleware(CORSMiddleware,
+    allow_origins=os.getenv("FRAUDLENS_CASE_ORIGINS", "http://127.0.0.1:3000,http://localhost:3000,http://127.0.0.1:4176,http://localhost:4176").split(","),
+    allow_methods=["GET", "POST"], allow_headers=["Authorization", "Content-Type"], allow_credentials=False)
+app.include_router(case_router)
+
+
+@app.middleware("http")
+async def security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 @app.get("/health")

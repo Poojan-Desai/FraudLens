@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, Integer, String
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint, DDL, event
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -76,3 +76,37 @@ class SimulationRun(Base):
     missed_fraud_loss: Mapped[float] = mapped_column(Float)
     operational_cost: Mapped[float] = mapped_column(Float)
     total_strategy_cost: Mapped[float] = mapped_column(Float)
+
+
+class InvestigationCase(Base):
+    __tablename__ = "investigation_cases"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    transaction_id: Mapped[str] = mapped_column(String(80), unique=True, index=True)
+    status: Mapped[str] = mapped_column(String(24), default="pending", index=True)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    snapshot_json: Mapped[str] = mapped_column(Text)
+    snapshot_sha256: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[str] = mapped_column(String(40))
+    updated_at: Mapped[str] = mapped_column(String(40), index=True)
+
+
+class CaseEvent(Base):
+    __tablename__ = "case_events"
+    __table_args__ = (UniqueConstraint("case_id", "version"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    case_id: Mapped[str] = mapped_column(ForeignKey("investigation_cases.id"), index=True)
+    version: Mapped[int] = mapped_column(Integer)
+    payload_json: Mapped[str] = mapped_column(Text)
+    previous_hash: Mapped[str] = mapped_column(String(64))
+    event_hash: Mapped[str] = mapped_column(String(64))
+
+
+# Application users have no mutation/delete event routes. SQLite additionally
+# rejects accidental SQL updates/deletes; a DB owner can still disable triggers.
+for operation in ("UPDATE", "DELETE"):
+    event.listen(CaseEvent.__table__, "after_create", DDL(
+        f"CREATE TRIGGER case_events_no_{operation.lower()} BEFORE {operation} ON case_events "
+        "BEGIN SELECT RAISE(ABORT, 'case events are append-only'); END"
+    ).execute_if(dialect="sqlite"))

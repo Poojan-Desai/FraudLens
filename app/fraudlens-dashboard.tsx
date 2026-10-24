@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   Area,
   AreaChart,
@@ -253,6 +254,7 @@ export default function FraudLensDashboard() {
           <p>Workspace</p>
           <a className="active" href="#strategy"><LayoutDashboard size={18} />Strategy simulator</a>
           <a href="#transactions"><TableProperties size={18} />Transactions</a>
+          <Link href="/investigations/"><ShieldCheck size={18} />Case investigations</Link>
           <a href="#models"><BrainCircuit size={18} />Model comparison</a>
           <a href="#attacks"><FlaskConical size={18} />Attack pattern lab</a>
           <p>System</p>
