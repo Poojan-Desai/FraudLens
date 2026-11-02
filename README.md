@@ -66,6 +66,10 @@ Do not publish the generated credentials or runtime database.
 
 ## Verified evidence
 
+The [November release review](docs/VERIFICATION-2026-11-02.md) adds verified
+training-CLI and aggregate-range fixes, dependency remediation, and **72 passing
+backend tests**. The original study is unchanged.
+
 Fresh October 28, 2026 local checks passed **60 backend tests, seven frontend unit
 tests, 83 dashboard browser checks and 27 investigation browser checks**, plus
 lint, TypeScript and the production static build. A fresh full 75,000-row study
@@ -109,8 +113,11 @@ Exports remove notes/actors while retaining synthetic transaction evidence.
 Only trusted locally generated joblib bundles should ever be loaded.
 
 The repaired lockfile passes clean `npm ci`. The November 2, 2026 npm registry
-audit reports **31 development/build findings (nine high, 22 moderate), zero
-critical and zero production-only findings**. This dependency debt remains
-unresolved; registry findings can change without a lockfile change. The
-[October verification](docs/VERIFICATION-2026-10-28.md) records the earlier audit.
+audit now reports **23 moderate development/build findings, zero high/critical,
+and zero production-only findings** after compatible remediation of all nine
+high findings. Python requirements auditing found no known vulnerabilities after
+FastAPI/Starlette and pytest updates. Remaining tooling upgrades require separate
+compatibility work; no forced major overrides or downgrades were applied. See the
+[November release review](docs/VERIFICATION-2026-11-02.md) for exact checks and
+remaining legacy-build limits; older verification files retain historical results.
 No general security certification or production banking deployment is claimed.

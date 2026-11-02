@@ -1,14 +1,20 @@
-from pathlib import Path
+"""Compatibility entry point for the supported four-window synthetic study."""
+import sys
 
-import pandas as pd
+from scripts.run_experiment import main as run_study
 
-from backend.app.ml.train import train_logistic, train_xgboost
+
+def main() -> None:
+    print(
+        "Deprecated: train_models.py now runs the four-window study with the "
+        "same --config, --output and --snapshot options as run_experiment.py. "
+        "It generates the configured synthetic dataset; legacy "
+        "data/synthetic/transactions.csv is not loaded. Use "
+        "PYTHONPATH=. python scripts/run_experiment.py for new runs.",
+        file=sys.stderr,
+    )
+    run_study()
 
 
 if __name__ == "__main__":
-    source = Path("data/synthetic/transactions.csv")
-    if not source.exists():
-        raise SystemExit("Run scripts/generate_synthetic.py first")
-    frame = pd.read_csv(source, parse_dates=["timestamp"])
-    print(train_logistic(frame, Path("artifacts")))
-    print(train_xgboost(frame, Path("artifacts")))
+    main()

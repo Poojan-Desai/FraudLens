@@ -77,8 +77,15 @@ python3 -m http.server 4176 --bind 127.0.0.1 --directory out
 
 Open `http://127.0.0.1:4176`. An existing run directory is immutable: use another
 output directory to repeat an experiment. `configs/synthetic-v2.json` contains the
-fixed experiment configuration. The legacy `train_models.py` is a different
-three-window F1 study and must not be mixed with this four-window cost study.
+fixed experiment configuration. The legacy `train_models.py` CLI now forwards to
+this same four-window runner, with a deprecation notice and the same options. It
+generates the configured synthetic dataset instead of loading the old
+`data/synthetic/transactions.csv` path, which could contain arbitrary columns.
+Use `run_experiment.py` for new work. Historical `train_logistic` and
+`train_xgboost` helper functions remain in `backend/app/ml/train.py` for source
+history compatibility; they use a separate three-window F1 procedure and infer
+features from input columns. They are not used by the API, supported CLI or
+published evaluation and must not be used for the current four-window evidence.
 
 ### Complete investigation demonstration
 

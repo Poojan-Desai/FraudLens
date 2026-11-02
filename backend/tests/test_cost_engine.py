@@ -1,5 +1,9 @@
+import math
+
+import pytest
+
 from backend.app.schemas import ScoredTransaction, StrategyAssumptions
-from backend.app.services.cost_engine import evaluate_strategy
+from backend.app.services.cost_engine import StrategyRangeError, evaluate_strategy
 
 
 ROWS = [
@@ -29,3 +33,31 @@ def test_probabilities_produce_bounded_metrics():
     assert 0 <= result.precision <= 1
     assert 0 <= result.recall <= 1
     assert 0 <= result.f1 <= 1
+
+
+@pytest.mark.parametrize("probability,is_fraud,assumptions", [
+    (0.1, True, {}),  # Raw missed amounts overflow before applying recovery.
+    (0.9, True, {}),  # Prevented amount overflows even if total cost stays small.
+    (0.9, False, {"false_positive_cost": 1e308}),
+    (0.9, True, {"manual_review_cost": 1e308}),
+])
+def test_finite_inputs_with_unrepresentable_aggregates_are_rejected(probability, is_fraud, assumptions):
+    rows = [ScoredTransaction(transaction_id=i, amount=1e308,
+                              fraud_probability=probability, is_fraud=is_fraud) for i in (1, 2)]
+    with pytest.raises(StrategyRangeError, match="finite numeric range"):
+        evaluate_strategy(rows, 0.5, StrategyAssumptions(**assumptions))
+
+
+def test_finite_components_cannot_overflow_combined_total():
+    rows = [ScoredTransaction(transaction_id=1, amount=1e308, fraud_probability=0.1, is_fraud=True),
+            ScoredTransaction(transaction_id=2, amount=1, fraud_probability=0.9, is_fraud=False)]
+    assumptions = StrategyAssumptions(fraud_recovery_rate=0, false_positive_cost=1e308, manual_review_cost=0)
+    with pytest.raises(StrategyRangeError, match="finite numeric range"):
+        evaluate_strategy(rows, 0.5, assumptions)
+
+
+def test_large_unused_cost_assumptions_do_not_create_nan():
+    rows = [ScoredTransaction(transaction_id=1, amount=100, fraud_probability=0.1, is_fraud=False)]
+    result = evaluate_strategy(rows, 0.5, StrategyAssumptions(false_positive_cost=1e308, customer_friction_cost=1e308))
+    assert result.total_strategy_cost == 0
+    assert all(math.isfinite(value) for value in result.to_dict().values())

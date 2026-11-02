@@ -2,9 +2,14 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass
+import math
 
 from ..schemas import ScoredTransaction, StrategyAssumptions
 from .money import round_cost
+
+
+class StrategyRangeError(ValueError):
+    """Finite inputs can still exceed the numeric range during aggregation."""
 
 
 @dataclass(frozen=True)
@@ -64,10 +69,19 @@ def evaluate_strategy(
     recall = tp / (tp + fn) if tp + fn else 0.0
     f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
     missed_loss = raw_missed_fraud * (1 - assumptions.fraud_recovery_rate)
-    fp_cost = fp * (assumptions.false_positive_cost + assumptions.customer_friction_cost)
+    fp_cost = fp * (assumptions.false_positive_cost + assumptions.customer_friction_cost) if fp else 0.0
     reviewed = min(flagged, assumptions.maximum_review_capacity)
     review_cost = reviewed * assumptions.manual_review_cost
     overflow = max(0, flagged - assumptions.maximum_review_capacity) * 1.65
+    total_cost = missed_loss + fp_cost + review_cost + overflow
+    # Schema validation bounds each input to finite values, but several large
+    # finite values can still overflow a sum/product. Reject before rounding or
+    # JSON serialization so neither Infinity nor a generic server error escapes.
+    if not all(math.isfinite(value) for value in (
+        prevented_fraud_amount, raw_missed_fraud, missed_loss, fp_cost,
+        review_cost, overflow, total_cost,
+    )):
+        raise StrategyRangeError("Strategy aggregates exceed the supported finite numeric range")
 
     return StrategyResult(
         threshold=threshold,
@@ -85,5 +99,5 @@ def evaluate_strategy(
         false_positive_cost=round(fp_cost, 2),
         manual_review_cost=round(review_cost, 2),
         capacity_overflow_cost=round(overflow, 2),
-        total_strategy_cost=round_cost(missed_loss + fp_cost + review_cost + overflow),
+        total_strategy_cost=round_cost(total_cost),
     )

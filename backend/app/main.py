@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .database import Base, engine
 from .schemas import AttackResponse, SimulationRequest, SimulationResponse
-from .services.cost_engine import evaluate_strategy
+from .services.cost_engine import StrategyRangeError, evaluate_strategy
 from .case_routes import router as case_router
 
 
@@ -57,7 +57,10 @@ def health() -> dict[str, str]:
 
 @app.post("/api/v1/strategy/simulate", response_model=SimulationResponse)
 def simulate_strategy(request: SimulationRequest) -> SimulationResponse:
-    result = evaluate_strategy(request.transactions, request.threshold, request.assumptions)
+    try:
+        result = evaluate_strategy(request.transactions, request.threshold, request.assumptions)
+    except StrategyRangeError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from None
     return SimulationResponse(**result.to_dict())
 
 
