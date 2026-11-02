@@ -1,20 +1,37 @@
 # Netlify deployment
 
-Live URL: https://fraudlens-poojan-desai.netlify.app
+Existing site: [fraudlens-poojan-desai](https://fraudlens-poojan-desai.netlify.app).
+Site ID: `b6855c51-9f33-4cb4-b68f-a816db9ae76b`.
 
-Migrated on October 5, 2026. The interactive browser demo is preserved. Python backends, data pipelines, and cloud integrations remain reproducible local/source components; the Netlify deployment does not turn those components into live services.
+The production artifact is the Next.js static export in `out/`. It includes the
+current four-window synthetic-study dashboard, public evaluation snapshot and
+local investigation interface. FastAPI, model training, the case database and
+credentials remain local; this deployment does not create a hosted case API or
+live model-serving service. Use the README's loopback setup for the complete
+investigation workflow. Authenticated case writes are not exposed publicly.
 
-## Build and publish
+## Build and publish to the existing site
 
-Use Node.js 22 or newer and an authenticated Netlify CLI.
+Use Node.js 22.13+ and an authenticated Netlify CLI:
 
 ```sh
 npm ci
+npm run test:unit
+npm run lint
 npm run build
-netlify link --id b6855c51-9f33-4cb4-b68f-a816db9ae76b
-netlify deploy --prod --dir out --no-build
+netlify deploy --prod --dir out --no-build --site b6855c51-9f33-4cb4-b68f-a816db9ae76b
 ```
 
-Only `out` is uploaded. Source files and local data are not served. The original ChatGPT Sites deployment is retained. Netlify deployments are currently manual; no GitHub build hook was added.
+Only `out/` is uploaded. Never publish the repository root, `.env`, `work/`, runtime
+databases, generated local tokens or executable model bundles. The legacy
+Cloudflare/Sites helpers are excluded from this build. Deployment remains manual;
+no site, account, security setting or GitHub build hook needs to be created.
 
-FraudLens uses Next.js static export. Seven strategy tests and the production build passed. Legacy Cloudflare/Sites helpers remain in source but are excluded from the Netlify application build. The current local branch adds precomputed held-out model-score threshold analysis; transaction explanations and attack examples remain authored and labeled. A deployment of this branch requires separate authorization; the live URL still serves its previously deployed revision.
+## Verify the live revision
+
+The build writes `out/release.json` with only the Git commit, repository URL,
+synthetic study ID, UTC build time and static/local boundary. After publishing,
+read [the public release manifest](https://fraudlens-poojan-desai.netlify.app/release.json)
+and compare `source_commit` with the pushed commit. Confirm the existing site ID,
+production deploy state and public HTML/evaluation bytes against the local export.
+A static release manifest is provenance metadata, not a security certification.

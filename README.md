@@ -11,7 +11,9 @@ dashboard and an analyst review workflow.
 
 The hosted dashboard is a static snapshot. Investigation actions require the local
 API and configured credentials; this repository does not provide a live inference
-or production banking service.
+or production banking service. Build provenance at
+[`release.json`](https://fraudlens-poojan-desai.netlify.app/release.json) identifies
+the deployed source commit and synthetic study.
 
 ## What it demonstrates
 
@@ -106,8 +108,9 @@ but are unsigned and cannot protect against a database owner rewriting all histo
 Exports remove notes/actors while retaining synthetic transaction evidence.
 Only trusted locally generated joblib bundles should ever be loaded.
 
-The repaired lockfile passes clean `npm ci`. The current npm audit reports
-**15 development/build findings (nine high, six moderate), zero critical and zero
-production-only findings**. These remain unresolved dependency debt, detailed in
-[verification](docs/VERIFICATION-2026-10-28.md). No general security certification
-or production deployment is claimed.
+The repaired lockfile passes clean `npm ci`. The November 2, 2026 npm registry
+audit reports **31 development/build findings (nine high, 22 moderate), zero
+critical and zero production-only findings**. This dependency debt remains
+unresolved; registry findings can change without a lockfile change. The
+[October verification](docs/VERIFICATION-2026-10-28.md) records the earlier audit.
+No general security certification or production banking deployment is claimed.
