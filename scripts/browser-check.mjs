@@ -3,6 +3,7 @@ import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright-core';
 
 const snapshot = JSON.parse(await readFile(new URL('../public/evaluation.json', import.meta.url), 'utf8'));
+const modelComparison = JSON.parse(await readFile(new URL('../public/model-comparison.json', import.meta.url), 'utf8'));
 const baseURL = process.env.FRAUDLENS_BROWSER_URL ?? 'http://127.0.0.1:4176';
 const output = process.env.FRAUDLENS_BROWSER_OUTPUT ?? 'work/browser-check';
 await mkdir(output, {recursive:true});
@@ -24,6 +25,32 @@ try {
       check(`${width}: no page overflow ${suffix}`,size.body<=width+1 && size.document<=width+1);
     };
     await checkBounds('initial');
+    await page.screenshot({path:`${output}/fraudlens-model-upgrade-${width}.png`});
+    const fresh = page.locator('#model-upgrade');
+    check(`${width}: frozen comparison appears before legacy controls`,await page.evaluate(()=>Boolean(document.querySelector('#model-upgrade').compareDocumentPosition(document.querySelector('#strategy'))&Node.DOCUMENT_POSITION_FOLLOWING)));
+    check(`${width}: ranking label follows the frozen gate`,await fresh.getAttribute('data-comparison-status')===(modelComparison.comparison.promotion_gate_passed?'validated':'inconclusive'));
+    const formatted = value => new Intl.NumberFormat('en-US').format(value);
+    for(const name of ['incumbent','challenger']) {
+      const expected = modelComparison.models[name].budgets[String(modelComparison.primary_budget)];
+      const card = fresh.locator(`[data-model="${name}"]`);
+      check(`${width}: ${name} shows fresh paired fraud count`,(await card.locator('.upgrade-found').innerText())===`${formatted(expected.true_positives)} / ${formatted(modelComparison.fresh_evaluation.fraud_rows)}`);
+      check(`${width}: ${name} shows fresh false alerts`,(await card.innerText()).includes(formatted(expected.false_positives)));
+    }
+    check(`${width}: every predeclared budget is shown`,await fresh.locator('tbody tr').count()===Object.keys(modelComparison.models.incumbent.budgets).length);
+    for(const [budget, old] of Object.entries(modelComparison.models.incumbent.budgets)) {
+      const next = modelComparison.models.challenger.budgets[budget];
+      const row = fresh.locator(`[data-budget="${budget}"]`);
+      const cells = await row.locator('td').allTextContents();
+      check(`${width}: budget ${budget} preserves same-alert paired counts`,cells[0]===formatted(old.alerts)&&old.alerts===next.alerts&&cells[1]===`${formatted(old.true_positives)} → ${formatted(next.true_positives)}`&&cells[3]===`${formatted(old.false_positives)} → ${formatted(next.false_positives)}`);
+    }
+    check(`${width}: cost regression stays visibly disclosed`,(await fresh.locator('.upgrade-cost-caveat').innerText()).includes('cost policy regressed') && (await fresh.locator('.upgrade-cost-caveat').innerText()).includes('$84,405.00'));
+    const freshBeforeLegacyEdits = await fresh.locator('.upgrade-models').innerText();
+    await fresh.locator('summary').click();
+    const comparisonDownload = page.getByRole('link',{name:'Download model comparison report',exact:true});
+    const currentComparison = await page.request.get(new URL(await comparisonDownload.getAttribute('href'),baseURL).href);
+    check(`${width}: fresh report download matches frozen plan`,currentComparison.ok() && (await currentComparison.json()).plan_id===modelComparison.plan_id);
+    await checkBounds('fresh evidence open');
+    await fresh.locator('summary').click();
     const slider = page.getByLabel('Fraud decision threshold',{exact:true});
     for (const [key,index] of [['Home',0],['End',98]]) {
       await slider.press(key);
@@ -34,6 +61,7 @@ try {
       check(`${width}: keyboard ${key} uses actual test confusion counts`,JSON.stringify(counts)===JSON.stringify([expected.true_positives,expected.false_negatives,expected.false_positives,expected.true_negatives]));
     }
     await page.getByRole('button',{name:/Apply selection policy/}).click();
+    check(`${width}: legacy controls cannot change fresh model results`,await fresh.locator('.upgrade-models').innerText()===freshBeforeLegacyEdits);
     check(`${width}: policy chosen from selection`,await slider.inputValue()===String(snapshot.models.xgboost.selected_threshold));
     for (const [label, betaSquared] of [['Balanced F1',1],['Recall-focused F2',4]]) {
       const score = point => (1+betaSquared)*point.true_positives / ((1+betaSquared)*point.true_positives + betaSquared*point.false_negatives + point.false_positives || 1);

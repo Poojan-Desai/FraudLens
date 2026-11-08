@@ -1,0 +1,47 @@
+{
+  "protocol_version": 1,
+  "declared_date": "2026-11-08",
+  "purpose": "Actual model comparison, not a threshold-only recall claim",
+  "generator": "unchanged synthetic_strategy_v1",
+  "features": "unchanged twelve-feature allowlist; no oracle/generator-risk feature additions",
+  "development": {
+    "seeds": [11, 29, 73],
+    "generated_rows_per_seed": 75000,
+    "retained_train_rows": 45000,
+    "retained_calibration_rows": 11250,
+    "retained_selection_rows": 7500,
+    "discarded_tail_rows_not_used": 11250,
+    "candidate_family": "twelve predeclared XGBoost weighting/depth/regularization configurations",
+    "selection_primary": "highest mean selection average precision across three seeds, deterministic candidate ID tie break",
+    "selection_secondary": "recall among top 2 percent of selection scores; descriptive, not an additional selection optimization"
+  },
+  "frozen_fit": {
+    "seed": 42,
+    "generated_rows": 75000,
+    "train_rows": 45000,
+    "calibration_rows": 11250,
+    "policy_selection_rows": 7500,
+    "original_visible_test_tail_excluded": 11250,
+    "incumbent": "exact original calibrated XGBoost settings",
+    "challenger": "winner selected from development only"
+  },
+  "reserved_final_evaluation": {
+    "seed": 20261108,
+    "rows": 150000,
+    "generation_rule": "generate only after candidate, source hashes and frozen plan are written",
+    "primary": "paired change in average precision",
+    "secondary": "paired fraud recall at fixed 2 percent batch review budget; exactly 3000 alerts for both models",
+    "additional_predeclared_budgets": [0.005, 0.01, 0.05],
+    "intervals": "500 paired ordinary row bootstrap replicates, percentile 95 percent intervals; ranking and top-k recomputed within each replicate",
+    "bootstrap_seed": 90210,
+    "promotion_gate": "positive lower 95 percent AP-difference bound AND no lower point-estimate recall at primary review budget; report secondary interval separately",
+    "failure_rule": "If gate fails, do not claim independently validated model improvement or tune against this test. Report the result and retain incumbent."
+  },
+  "limits": [
+    "Same known stationary synthetic mechanism, independent random draw; not real payments or future-time validation",
+    "Budget ranking uses no labels; count and budget fixed before final scores are seen",
+    "At a fixed alert count precision and recall share the same true-positive numerator",
+    "Bootstrap conditions on fitted models and does not capture training-seed uncertainty; three development seeds are limited",
+    "No claimed business savings, fairness validation, security certification or production inference service"
+  ]
+}

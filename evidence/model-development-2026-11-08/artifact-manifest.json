@@ -1,0 +1,58 @@
+{
+  "schema": "fraudlens-development-evidence-copy/v1",
+  "scope": "Development screening only; no test predictions or final holdout included.",
+  "files": {
+    "candidate_screening.py": {
+      "original_sha256": "44b494147a1fe8154992e3f8d9a385f2c23aa33f56e8ca53f53a2e941de0215e",
+      "included_sha256": "44b494147a1fe8154992e3f8d9a385f2c23aa33f56e8ca53f53a2e941de0215e",
+      "byte_identical": true
+    },
+    "protocol-v1.json": {
+      "original_sha256": "aebc6e1e93efa3f7df761570a758f60b58e46b914ab60980b42503cd6e16971a",
+      "included_sha256": "aebc6e1e93efa3f7df761570a758f60b58e46b914ab60980b42503cd6e16971a",
+      "byte_identical": true
+    },
+    "frozen-candidate.json": {
+      "original_sha256": "675de36fcb8b8d7306467eb88a3d63bf4428a3e348febb2c544ddcbac5a4c8f6",
+      "included_sha256": "675de36fcb8b8d7306467eb88a3d63bf4428a3e348febb2c544ddcbac5a4c8f6",
+      "byte_identical": true
+    },
+    "screen-consistency-checks.json": {
+      "original_sha256": "a648cd9b2228a0d2b814b72346518e1ba5ca17d8b64b9a2f312cf90f39595482",
+      "included_sha256": "a648cd9b2228a0d2b814b72346518e1ba5ca17d8b64b9a2f312cf90f39595482",
+      "byte_identical": true
+    },
+    "candidate-screen-recommendation.md": {
+      "original_sha256": "594bedf5758f74a15d685d49ab74ec00f3157bad32b3350f158d15c4f65b1985",
+      "included_sha256": "594bedf5758f74a15d685d49ab74ec00f3157bad32b3350f158d15c4f65b1985",
+      "byte_identical": true
+    },
+    "screening.log": {
+      "original_sha256": "532cfe1b068b2ea3d751f72af84e4aa56935ff6c5597633a6639d034d74d75f5",
+      "included_sha256": "532cfe1b068b2ea3d751f72af84e4aa56935ff6c5597633a6639d034d74d75f5",
+      "byte_identical": true
+    },
+    "candidate-screen-results.json": {
+      "original_sha256": "d045957f4ccc40ec45fba65d81ccb34a5746707f7a5384a051869da2ab988bca",
+      "included_sha256": "7d592bcfe076fefe7c88e9586ab662c70ada298de36a143e4724c172e4163bc7",
+      "byte_identical": false,
+      "reason": "Whitespace compaction only; identical parsed JSON and canonical SHA256. Freeze plans should hash the included report bytes.",
+      "canonical_json_sha256": "0369fff12ac3e961c658497a3c9813cbb4cfd176aaf78a8e06bf96e2ff473ff2",
+      "original_bytes": 99095,
+      "included_bytes": 70105
+    },
+    "implementation-review.json": {
+      "included_sha256": "c9ae6307a4daa977ff58846563533560609f5cd04d6f3a5a7eb96f6e74252e23",
+      "note": "Review/reproduction documentation added after screening; original executed script is separately preserved."
+    },
+    "reproduce.py": {
+      "included_sha256": "1721ac4ecbd020272eed25d6a92bb8ebc57945d3b288bdb4cf15a5582deeb218",
+      "note": "Review/reproduction documentation added after screening; original executed script is separately preserved."
+    },
+    "README.md": {
+      "included_sha256": "db6729923951c119f1dd8fd0e2ce245b79f580218a4e85c276fb9987385e8db7",
+      "note": "Review/reproduction documentation added after screening; original executed script is separately preserved."
+    }
+  },
+  "executed_script_sha256": "44b494147a1fe8154992e3f8d9a385f2c23aa33f56e8ca53f53a2e941de0215e"
+}

@@ -1,0 +1,14 @@
+{
+  "status": "passed",
+  "checks": [
+    "Canonical protocol checksum matches results and frozen proposal",
+    "Exactly 12 predeclared candidates \u00d7 3 permitted development seeds = 36 unique fits",
+    "Each saved prediction array has exactly 7500 selection rows, finite values and binary labels",
+    "All fits use a 150/7500 review budget and n_jobs=1",
+    "Frozen candidate equals primary/secondary ranked winner",
+    "Original feature allowlist retained in protocol and frozen proposal"
+  ],
+  "final_holdout_access": "none",
+  "test_window_access": "generated as part of required 75000-row source then discarded before any inspection/validation/prediction/evaluation",
+  "scope": "Artifact consistency only, no final model validation"
+}

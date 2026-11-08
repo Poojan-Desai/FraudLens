@@ -55,3 +55,15 @@ limited recall; no fairness evaluation or real-world subgroup claims. Case
 reason codes describe observed inputs, not calibrated individual feature
 attributions or causal explanations. Investigator judgments remain untrusted
 for training and never update the generator's ground-truth labels.
+
+
+## November 8 model-comparison addendum
+
+The original study and all numbers above are unchanged historical evidence.
+A separate development-selected XGBoost configuration (depth 2, no positive-class
+upweighting, min_child_weight 5, reg_lambda 5) was frozen before an independent
+150,000-row synthetic replication. Average precision increased from 0.248726 to
+0.272632 (+9.61% relative), with 650 versus 604 fraud cases caught at exactly 3,000 alerts
+for each model. Its selection-cost policy regressed ($84,405.00 versus $81,248.93),
+so this is a supported synthetic ranking improvement, not universal policy or
+financial improvement. See [complete protocol, confidence intervals and caveats](MODEL_IMPROVEMENT_2026-11-08.md).

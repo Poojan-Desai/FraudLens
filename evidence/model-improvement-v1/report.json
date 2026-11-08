@@ -1,0 +1,279 @@
+{
+  "schema_version": 1,
+  "plan_id": "d8cc5fece5e3319e",
+  "frozen_plan_sha256": "46b27ec0230290f7b18318904e86957a2ac4018fee94a5c82e10f4420400b012",
+  "frozen_at_utc": "2026-11-08T22:42:54.918002+00:00",
+  "completed_at_utc": "2026-11-08T22:43:58.477141+00:00",
+  "features": [
+    "amount",
+    "merchant_category",
+    "country",
+    "distance_from_home",
+    "transactions_last_hour",
+    "average_amount_30d",
+    "amount_to_customer_average",
+    "new_device",
+    "card_present",
+    "account_age_days",
+    "is_international",
+    "previous_declines"
+  ],
+  "training_windows": {
+    "train": {
+      "rows": 45000,
+      "fraud_rows": 501,
+      "sha256": "99efbccfa0c9ddccd676eb52bf4ceceeb89566a94be69c563b6d404a0277d9f6"
+    },
+    "calibration": {
+      "rows": 11250,
+      "fraud_rows": 115,
+      "sha256": "6cd9974fa028344ca964f737810b0e0843f04111c6f83442eb905d6fc24a1474"
+    },
+    "selection": {
+      "rows": 7500,
+      "fraud_rows": 79,
+      "sha256": "2c817eca9b2c537857b583ee5747a73723ddd388139d94287c350bd54823faae"
+    }
+  },
+  "model_specs": {
+    "incumbent": {
+      "candidate": {
+        "id": "incumbent",
+        "weight_rule": "negative_positive_ratio",
+        "max_depth": 3,
+        "n_estimators": 300,
+        "min_child_weight": 1,
+        "reg_lambda": 1
+      },
+      "selection_average_precision": 0.18142207084238998,
+      "selection_cost_policy_threshold": 0.18,
+      "resolved_scale_pos_weight": 88.82035928143712
+    },
+    "challenger": {
+      "candidate": {
+        "id": "unit_d2_300_regularized",
+        "weight_rule": "one",
+        "max_depth": 2,
+        "n_estimators": 300,
+        "min_child_weight": 5.0,
+        "reg_lambda": 5.0
+      },
+      "selection_average_precision": 0.22894804436538788,
+      "selection_cost_policy_threshold": 0.66,
+      "resolved_scale_pos_weight": 1.0
+    }
+  },
+  "fresh_evaluation": {
+    "seed": 20261108,
+    "rows": 150000,
+    "fraud_rows": 1545,
+    "dataset_sha256": "cb98e3bb4d7adbca07d818fb64cbd6b244c15d571c8cf86c16656b3a0a449a97",
+    "description": "independent draw of unchanged known stationary synthetic mechanism; timestamps restart, not future-time holdout"
+  },
+  "primary_budget": 0.02,
+  "models": {
+    "incumbent": {
+      "average_precision": 0.24872599148209787,
+      "roc_auc": 0.8567680747077857,
+      "brier_score": 0.009267995564769394,
+      "budgets": {
+        "0.005": {
+          "budget_fraction": 0.005,
+          "alerts": 750,
+          "true_positives": 377,
+          "false_positives": 373,
+          "false_negatives": 1168,
+          "true_negatives": 148082,
+          "precision": 0.5026666666666667,
+          "recall": 0.24401294498381876,
+          "minimum_selected_score": 0.16430769354311858
+        },
+        "0.01": {
+          "budget_fraction": 0.01,
+          "alerts": 1500,
+          "true_positives": 492,
+          "false_positives": 1008,
+          "false_negatives": 1053,
+          "true_negatives": 147447,
+          "precision": 0.328,
+          "recall": 0.31844660194174756,
+          "minimum_selected_score": 0.1295242092116625
+        },
+        "0.02": {
+          "budget_fraction": 0.02,
+          "alerts": 3000,
+          "true_positives": 604,
+          "false_positives": 2396,
+          "false_negatives": 941,
+          "true_negatives": 146059,
+          "precision": 0.20133333333333334,
+          "recall": 0.39093851132686086,
+          "minimum_selected_score": 0.09695585465359818
+        },
+        "0.05": {
+          "budget_fraction": 0.05,
+          "alerts": 7500,
+          "true_positives": 816,
+          "false_positives": 6684,
+          "false_negatives": 729,
+          "true_negatives": 141771,
+          "precision": 0.1088,
+          "recall": 0.5281553398058253,
+          "minimum_selected_score": 0.05272864735133746
+        }
+      },
+      "selection_cost_policy": {
+        "threshold": 0.18,
+        "true_positives": 298,
+        "false_positives": 231,
+        "true_negatives": 148224,
+        "false_negatives": 1247,
+        "flagged": 529,
+        "precision": 0.5633270321361059,
+        "recall": 0.1928802588996764,
+        "f1": 0.28736740597878496,
+        "false_positive_rate": 0.0015560270789128018,
+        "review_workload": 0.0035266666666666667,
+        "fraud_detected": 24585.15,
+        "fraud_missed": 117624.81,
+        "missed_loss": 76456.13,
+        "friction_cost": 4158.0,
+        "review_cost": 634.8,
+        "capacity_overflow_cost": 0.0,
+        "total_cost": 81248.93
+      }
+    },
+    "challenger": {
+      "average_precision": 0.2726320394164549,
+      "roc_auc": 0.8694353742141687,
+      "brier_score": 0.008789485727662086,
+      "budgets": {
+        "0.005": {
+          "budget_fraction": 0.005,
+          "alerts": 750,
+          "true_positives": 399,
+          "false_positives": 351,
+          "false_negatives": 1146,
+          "true_negatives": 148104,
+          "precision": 0.532,
+          "recall": 0.258252427184466,
+          "minimum_selected_score": 0.10475877863134926
+        },
+        "0.01": {
+          "budget_fraction": 0.01,
+          "alerts": 1500,
+          "true_positives": 519,
+          "false_positives": 981,
+          "false_negatives": 1026,
+          "true_negatives": 147474,
+          "precision": 0.346,
+          "recall": 0.3359223300970874,
+          "minimum_selected_score": 0.024682339810506847
+        },
+        "0.02": {
+          "budget_fraction": 0.02,
+          "alerts": 3000,
+          "true_positives": 650,
+          "false_positives": 2350,
+          "false_negatives": 895,
+          "true_negatives": 146105,
+          "precision": 0.21666666666666667,
+          "recall": 0.42071197411003236,
+          "minimum_selected_score": 0.014416442568581381
+        },
+        "0.05": {
+          "budget_fraction": 0.05,
+          "alerts": 7500,
+          "true_positives": 836,
+          "false_positives": 6664,
+          "false_negatives": 709,
+          "true_negatives": 141791,
+          "precision": 0.11146666666666667,
+          "recall": 0.5411003236245955,
+          "minimum_selected_score": 0.010031925001924125
+        }
+      },
+      "selection_cost_policy": {
+        "threshold": 0.66,
+        "true_positives": 163,
+        "false_positives": 73,
+        "true_negatives": 148382,
+        "false_negatives": 1382,
+        "flagged": 236,
+        "precision": 0.690677966101695,
+        "recall": 0.10550161812297734,
+        "f1": 0.18304323413812465,
+        "false_positive_rate": 0.000491731501128288,
+        "review_workload": 0.0015733333333333333,
+        "fraud_detected": 14813.35,
+        "fraud_missed": 127396.61,
+        "missed_loss": 82807.8,
+        "friction_cost": 1314.0,
+        "review_cost": 283.2,
+        "capacity_overflow_cost": 0.0,
+        "total_cost": 84405.0
+      }
+    }
+  },
+  "comparison": {
+    "average_precision_delta": 0.02390604793435705,
+    "average_precision_relative_change": 0.09611399191498526,
+    "primary_budget_recall_delta": 0.0297734627831715,
+    "intervals": {
+      "method": "paired ordinary row bootstrap; percentile 95%, numpy linear quantiles; original-ID score ties; sklearn grouped-tie AP",
+      "requested_replicates": 500,
+      "valid_replicates": 500,
+      "seed": 90210,
+      "average_precision_delta_95": {
+        "lower": 0.014946943227530709,
+        "upper": 0.033180460812189
+      },
+      "primary_budget_recall_delta_95": {
+        "lower": 0.016082022406687154,
+        "upper": 0.039532788998071756
+      }
+    },
+    "promotion_gate": "positive lower 95% AP-delta bound and nonnegative primary-budget recall point delta",
+    "promotion_gate_passed": true,
+    "claim_scope": "independent same-generator synthetic ranking comparison; not real-payment or future-time validation"
+  },
+  "predictions_sha256": "c09d12b497d766e3a949a9ad3248f2fe79c7a2b29484b72395bc126cb38d0873",
+  "model_artifact_sha256": {
+    "incumbent.joblib": "aa83ab60c677dfca4a59652f1e84076abcf3be6cbab2172a858b681d8d8cb429",
+    "challenger.joblib": "7252e9b3140b9a0c94364bb1ea6558ff0db26c18c3c11c541fd32057ad27279a"
+  },
+  "provenance": {
+    "source_sha256": {
+      "backend/app/ml/model_comparison.py": "46481496599ff5e938d9c69a8a6658e3967642299c713ecf6901a06e093982ed",
+      "backend/app/ml/synthetic.py": "69b8816f72592bfe4799a6c196cdfa6c4ddb0fcbfd792a0a615363730a92a068",
+      "backend/app/ml/train.py": "97b6f60c2c43379fb87091f2c58ebeabe4ef1912cd9f4e19f932e87234bfcced",
+      "backend/app/ml/experiment.py": "3dc1fe0487d595c20c27df80755c0eb745887e8886ae0bfc9cdb11adb47cef01",
+      "backend/app/ml/validation.py": "c9f6f508a69529282215a00e3de3defc1d1663cc0a3d906b34c0d19213320b04",
+      "backend/app/schemas.py": "0a29cb2eba33efe0fc675a3e6360f518ecccb39da86bcdfb785f002d1a13deba",
+      "backend/app/services/money.py": "3d3c4f987abe57ab43978fd9e5f6191334ca0904326bebe6d0f32c2c68b19f9d"
+    },
+    "environment": {
+      "python": "3.13.1",
+      "platform": "macOS-14.4-arm64-arm-64bit-Mach-O",
+      "packages": {
+        "numpy": "2.3.2",
+        "pandas": "2.2.3",
+        "scipy": "1.18.1",
+        "scikit-learn": "1.7.1",
+        "xgboost": "3.0.3",
+        "joblib": "1.5.1"
+      }
+    },
+    "source_commit": "27d273278d98fd92252f2eca130d30df780c1c5b",
+    "development_report_sha256": "7d592bcfe076fefe7c88e9586ab662c70ada298de36a143e4724c172e4163bc7",
+    "protocol_sha256": "ad1e56a5ffab0e6c6fb57f48a278e0d1835d7b0adb1ba8921018e063d0654cca"
+  },
+  "limitations": [
+    "Synthetic mechanism was known; real-payment performance is not established.",
+    "One final fitting seed and one independent final draw; bootstrap conditions on fitted models, not training uncertainty.",
+    "Primary top-2% budget fixed before final evaluation; precision and recall at the same alert count share one TP numerator.",
+    "Batch top-k is not a threshold-based live arrival policy. No hosted inference service is created.",
+    "Cost results use illustrative assumptions; ranking improvement does not imply improved calibration or realized savings.",
+    "Signed provenance, fairness assessment, external data, temporal drift and bank deployment remain unverified."
+  ]
+}

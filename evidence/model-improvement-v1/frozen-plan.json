@@ -1,0 +1,56 @@
+{
+  "plan": {
+    "schema_version": 1,
+    "candidate": {
+      "id": "unit_d2_300_regularized",
+      "weight_rule": "one",
+      "max_depth": 2,
+      "n_estimators": 300,
+      "min_child_weight": 5.0,
+      "reg_lambda": 5.0
+    },
+    "development_seeds": [
+      11,
+      29,
+      73
+    ],
+    "fit_seed": 42,
+    "fit_generated_rows": 75000,
+    "final_seed": 20261108,
+    "final_rows": 150000,
+    "primary_budget": 0.02,
+    "reported_budgets": [
+      0.005,
+      0.01,
+      0.02,
+      0.05
+    ],
+    "bootstrap_replicates": 500,
+    "bootstrap_seed": 90210
+  },
+  "source_sha256": {
+    "backend/app/ml/model_comparison.py": "46481496599ff5e938d9c69a8a6658e3967642299c713ecf6901a06e093982ed",
+    "backend/app/ml/synthetic.py": "69b8816f72592bfe4799a6c196cdfa6c4ddb0fcbfd792a0a615363730a92a068",
+    "backend/app/ml/train.py": "97b6f60c2c43379fb87091f2c58ebeabe4ef1912cd9f4e19f932e87234bfcced",
+    "backend/app/ml/experiment.py": "3dc1fe0487d595c20c27df80755c0eb745887e8886ae0bfc9cdb11adb47cef01",
+    "backend/app/ml/validation.py": "c9f6f508a69529282215a00e3de3defc1d1663cc0a3d906b34c0d19213320b04",
+    "backend/app/schemas.py": "0a29cb2eba33efe0fc675a3e6360f518ecccb39da86bcdfb785f002d1a13deba",
+    "backend/app/services/money.py": "3d3c4f987abe57ab43978fd9e5f6191334ca0904326bebe6d0f32c2c68b19f9d"
+  },
+  "development_report_sha256": "7d592bcfe076fefe7c88e9586ab662c70ada298de36a143e4724c172e4163bc7",
+  "protocol_sha256": "ad1e56a5ffab0e6c6fb57f48a278e0d1835d7b0adb1ba8921018e063d0654cca",
+  "environment": {
+    "python": "3.13.1",
+    "platform": "macOS-14.4-arm64-arm-64bit-Mach-O",
+    "packages": {
+      "numpy": "2.3.2",
+      "pandas": "2.2.3",
+      "scipy": "1.18.1",
+      "scikit-learn": "1.7.1",
+      "xgboost": "3.0.3",
+      "joblib": "1.5.1"
+    }
+  },
+  "frozen_at_utc": "2026-11-08T22:42:54.918002+00:00",
+  "plan_id": "d8cc5fece5e3319e"
+}

@@ -1,0 +1,48 @@
+{
+  "status": "passed",
+  "generated_seed_and_count": {
+    "seed": 11,
+    "count": 6000
+  },
+  "used_windows": {
+    "train": 3600,
+    "calibration": 900,
+    "selection": 600
+  },
+  "remaining_rows": "discarded without inspection",
+  "fitted_probability_equivalence": {
+    "incumbent": {
+      "selection_rows": 600,
+      "byte_identical_probabilities": true,
+      "maximum_absolute_difference": 0.0
+    },
+    "challenger": {
+      "selection_rows": 600,
+      "byte_identical_probabilities": true,
+      "maximum_absolute_difference": 0.0
+    }
+  },
+  "baseline_note": "Root explicitly sets min_child_weight/reg_lambda to 1; original constructor omits them. Small-fit predictions match byte-for-byte under the pinned version.",
+  "challenger_note": "Root estimator and fit_models exactly match screened proposal settings, original preprocessing and separate sigmoid calibration.",
+  "freeze_cli": {
+    "extraction_matches": true,
+    "generation_tripwire_passed": true,
+    "stdout": {
+      "plan_id": "98fa595869c5def8",
+      "frozen_at_utc": "2026-11-08T22:39:56.779642+00:00",
+      "final_data_generated": false
+    },
+    "plan_id": "98fa595869c5def8",
+    "note": "Review-only freeze artifact; do not use as the production evaluation plan."
+  },
+  "scope": "No reserved final seed or final holdout was generated or inspected; no final evaluation was run.",
+  "source_sha256_at_review": {
+    "backend/app/ml/model_comparison.py": "a5aa9b674746b7d663dce4454cd874d7678e9631edd2b47d7ec7ffa3a555d3e9",
+    "backend/app/ml/synthetic.py": "69b8816f72592bfe4799a6c196cdfa6c4ddb0fcbfd792a0a615363730a92a068",
+    "backend/app/ml/train.py": "97b6f60c2c43379fb87091f2c58ebeabe4ef1912cd9f4e19f932e87234bfcced",
+    "backend/app/ml/experiment.py": "3dc1fe0487d595c20c27df80755c0eb745887e8886ae0bfc9cdb11adb47cef01",
+    "backend/app/ml/validation.py": "c9f6f508a69529282215a00e3de3defc1d1663cc0a3d906b34c0d19213320b04",
+    "backend/app/schemas.py": "0a29cb2eba33efe0fc675a3e6360f518ecccb39da86bcdfb785f002d1a13deba",
+    "backend/app/services/money.py": "3d3c4f987abe57ab43978fd9e5f6191334ca0904326bebe6d0f32c2c68b19f9d"
+  }
+}

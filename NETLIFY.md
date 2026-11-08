@@ -4,7 +4,8 @@ Existing site: [fraudlens-poojan-desai](https://fraudlens-poojan-desai.netlify.a
 Site ID: `b6855c51-9f33-4cb4-b68f-a816db9ae76b`.
 
 The production artifact is the Next.js static export in `out/`. It includes the
-current four-window synthetic-study dashboard, public evaluation snapshot and
+current independent model-comparison panel, original four-window study, public
+evaluation/model-comparison snapshots and
 local investigation interface. FastAPI, model training, the case database and
 credentials remain local; this deployment does not create a hosted case API or
 live model-serving service. Use the README's loopback setup for the complete
