@@ -24,6 +24,9 @@ the deployed source commit and synthetic study.
   comparator, dataset manifests and checksum verification of saved results.
 - Threshold exploration based on measured test aggregates, with illustrative
   operating costs and explicitly labeled fictional transaction examples.
+- Three reviewable selection-based policies: minimum illustrative cost, maximum
+  F1 and maximum F2. The comparison shows test recall, precision, false alerts,
+  workload and modeled cost together. See [policy details](docs/POLICY_PRESETS.md).
 - Analyst case review with viewer/analyst/admin permissions, optimistic version
   checks, atomic decisions and an append-only hash-linked SQLite action journal.
 - Verified import of saved flagged predictions without loading executable model
