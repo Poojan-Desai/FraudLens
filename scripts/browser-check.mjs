@@ -35,6 +35,17 @@ try {
     }
     await page.getByRole('button',{name:/Apply selection policy/}).click();
     check(`${width}: policy chosen from selection`,await slider.inputValue()===String(snapshot.models.xgboost.selected_threshold));
+    for (const [label, betaSquared] of [['Balanced F1',1],['Recall-focused F2',4]]) {
+      const score = point => (1+betaSquared)*point.true_positives / ((1+betaSquared)*point.true_positives + betaSquared*point.false_negatives + point.false_positives || 1);
+      const expected = [...snapshot.models.xgboost.selection_thresholds].sort((a,b)=>score(b)-score(a)||b.threshold-a.threshold)[0];
+      await page.getByRole('button',{name:`Apply ${label} policy`,exact:true}).click();
+      check(`${width}: ${label} applies selection-scored threshold`,await slider.inputValue()===String(expected.threshold));
+      const test = snapshot.models.xgboost.test_thresholds.find(point=>point.threshold===expected.threshold);
+      const counts = (await page.locator('.matrix-cell strong').allTextContents()).map(value=>Number(value.replaceAll(',','')));
+      check(`${width}: ${label} displays test confusion counts`,JSON.stringify(counts)===JSON.stringify([test.true_positives,test.false_negatives,test.false_positives,test.true_negatives]));
+    }
+    await page.getByRole('button',{name:'Apply Cost-focused policy',exact:true}).click();
+    check(`${width}: cost preset restores selection cost policy`,await slider.inputValue()===String(snapshot.models.xgboost.selected_threshold));
     check(`${width}: inert topbar actions absent`,await page.getByRole('button',{name:'Notifications',exact:true}).count()===0 && await page.getByRole('button',{name:'Search',exact:true}).count()===0);
     await page.getByRole('button',{name:'Cost assumptions',exact:true}).click();
     for (const [label,invalid,retained] of [['False-positive friction cost','-1','18'],['Test-window review capacity','1.5','1400'],['Fraud recovery rate','150','35']]) {

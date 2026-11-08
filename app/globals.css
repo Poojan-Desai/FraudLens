@@ -319,6 +319,11 @@ footer p { margin-left: auto; font-size: 7.5px; } footer > a { color: #37735b; f
 .evaluation-evidence code { font-size: 12px; }
 .evaluation-evidence a { color: #135b40; text-decoration: underline; }
 .evidence-table-wrap { overflow-x: auto; margin: 18px 0; }
+.policy-comparison { padding: 20px; margin-bottom: 20px; min-width: 0; }
+.policy-comparison > p { color: #586960; font-size: 13px; line-height: 1.65; }
+.policy-comparison table { min-width: 740px; width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+.policy-comparison th, .policy-comparison td { border-bottom: 1px solid #e1e7e3; padding: 10px 12px; }
+.policy-comparison caption { text-align: left; padding-bottom: 8px; font-weight: 650; }
 .evaluation-evidence table { width: 100%; border-collapse: collapse; min-width: 460px; font-size: 13px; text-align: left; }
 .evaluation-evidence th, .evaluation-evidence td { border-bottom: 1px solid #e1e7e3; padding: 10px 12px; }
 .evaluation-evidence caption { text-align: left; font-size: 14px; font-weight: 650; padding-bottom: 8px; }

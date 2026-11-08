@@ -14,6 +14,22 @@ export type StrategyPoint = {
   fraudDetected: number; fraudMissed: number; flagged: number;
 };
 
+export const POLICY_OBJECTIVES = ["cost", "f1", "f2"] as const;
+export type PolicyObjective = (typeof POLICY_OBJECTIVES)[number];
+export const POLICY_LABELS: Record<PolicyObjective, string> = {
+  cost: "Cost-focused", f1: "Balanced F1", f2: "Recall-focused F2",
+};
+
+/** F-beta from counts; F2 weights recall four times as much as precision. */
+export function fBeta(point: StrategyPoint, beta: number): number {
+  if (!Number.isFinite(beta) || beta <= 0) throw new RangeError("beta must be positive and finite");
+  // Divide by beta squared for beta >= 1 to avoid overflow for finite beta.
+  const weight = beta >= 1 ? (1 / beta) ** 2 : beta * beta;
+  const numerator = (1 + weight) * point.truePositives;
+  const denominator = numerator + (beta >= 1 ? point.falseNegatives + weight * point.falsePositives : weight * point.falseNegatives + point.falsePositives);
+  return denominator ? numerator / denominator : 0;
+}
+
 type StoredPoint = (typeof evaluation.models.xgboost.test_thresholds)[number];
 
 function pricePoint(point: StoredPoint, friction: number, review: number, recovery: number, capacity: number): StrategyPoint {
@@ -45,6 +61,25 @@ export function strategyAt(threshold: number, friction: number, review: number, 
 
 /** Policy selection uses selection-window scores only, including changed costs. */
 export function findOptimalStrategy(friction: number, review: number, recovery: number, capacity: number, model: ModelKey = DEFAULT_MODEL): StrategyPoint {
+  return selectStrategyPolicy("cost", friction, review, recovery, capacity, model);
+}
+
+/** All presets select on selection aggregates, never on test performance.
+ * F1/F2 maximize their score, irrespective of cost or capacity. Ties prefer
+ * the higher threshold. The caller then reports test sensitivity separately.
+ */
+export function selectStrategyPolicy(objective: PolicyObjective, friction: number, review: number, recovery: number, capacity: number, model: ModelKey = DEFAULT_MODEL): StrategyPoint {
+  if (!POLICY_OBJECTIVES.includes(objective)) throw new RangeError("unsupported policy objective");
   const curve = evaluation.models[model].selection_thresholds.map((point) => pricePoint(point, friction, review, recovery, capacity));
-  return curve.reduce((best, point) => point.totalCost < best.totalCost || (Math.abs(point.totalCost - best.totalCost) < 1e-8 && point.threshold > best.threshold) ? point : best);
+  const score = (point: StrategyPoint) => objective === "cost" ? -point.totalCost : fBeta(point, objective === "f1" ? 1 : 2);
+  return curve.reduce((best, point) => score(point) > score(best) || (score(point) === score(best) && point.threshold > best.threshold) ? point : best);
+}
+
+/** An inspectable comparison, not a new model or an independent evaluation. */
+export function compareStrategyPolicies(friction: number, review: number, recovery: number, capacity: number, model: ModelKey = DEFAULT_MODEL) {
+  return POLICY_OBJECTIVES.map(objective => {
+    const selection = selectStrategyPolicy(objective, friction, review, recovery, capacity, model);
+    return { objective, label: POLICY_LABELS[objective], selection,
+      test: strategyAt(selection.threshold, friction, review, recovery, capacity, model) };
+  });
 }

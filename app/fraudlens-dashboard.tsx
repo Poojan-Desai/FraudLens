@@ -51,6 +51,7 @@ import {
   LEGITIMATE_TRANSACTIONS,
   FRAUD_TRANSACTIONS,
   evaluation,
+  compareStrategyPolicies,
   findOptimalStrategy,
   strategyAt,
   TOTAL_TRANSACTIONS,
@@ -220,6 +221,10 @@ export default function FraudLensDashboard() {
     () => findOptimalStrategy(frictionCost, reviewCost, recoveryRate, reviewCapacity),
     [frictionCost, reviewCost, recoveryRate, reviewCapacity],
   );
+  const policies = useMemo(
+    () => compareStrategyPolicies(frictionCost, reviewCost, recoveryRate, reviewCapacity),
+    [frictionCost, reviewCost, recoveryRate, reviewCapacity],
+  );
 
   const selectedX = `${threshold * 100}%`;
   const filteredTransactions = TRANSACTIONS.filter((transaction) => {
@@ -321,6 +326,19 @@ export default function FraudLensDashboard() {
             <KpiCard label="Fraud dollars missed" value={compactMoney.format(current.fraudMissed)} detail={`${integer.format(current.falseNegatives)} undetected cases`} icon={TrendingDown} tone="amber" />
             <KpiCard label="Legitimate declines" value={integer.format(current.falsePositives)} detail={`${(current.falsePositives / LEGITIMATE_TRANSACTIONS * 100).toFixed(2)}% of legitimate test transactions`} icon={UsersRound} tone="blue" />
             <KpiCard label="Estimated test-window cost" value={compactMoney.format(current.totalCost)} detail={`Friction + review + missed loss + overflow`} icon={CircleDollarSign} tone="violet" />
+          </section>
+
+          <section className="panel policy-comparison" aria-labelledby="policy-comparison-heading">
+            <div className="panel-heading"><div><span className="section-label">Choose a review objective</span><h2 id="policy-comparison-heading">Compare selection-based policies</h2></div></div>
+            <p>Each threshold is chosen using the 7,500-row selection window. Results below describe the same existing 11,250-row synthetic test window, not a new validation or model improvement. F1 balances precision and recall; F2 gives recall four times the weight. Neither score constrains review capacity or minimizes cost.</p>
+            <div className="evidence-table-wrap"><table>
+              <caption>Calibrated XGBoost: selection-chosen thresholds, test-window outcomes</caption>
+              <thead><tr><th scope="col">Policy</th><th scope="col">Threshold</th><th scope="col">Fraud caught</th><th scope="col">Precision</th><th scope="col">Alerts</th><th scope="col">False alerts</th><th scope="col">Modeled cost</th><th scope="col">Control</th></tr></thead>
+              <tbody>{policies.map(({ objective, label, test }) => <tr key={objective}>
+                <th scope="row">{label}</th><td>{test.threshold.toFixed(2)}</td><td>{test.truePositives} / {FRAUD_TRANSACTIONS} ({(test.recall * 100).toFixed(1)}%)</td><td>{(test.precision * 100).toFixed(1)}%</td><td>{integer.format(test.flagged)}{test.flagged > reviewCapacity ? " (over capacity)" : ""}</td><td>{integer.format(test.falsePositives)}</td><td>{money.format(test.totalCost)}</td><td><button className="secondary-button" aria-label={`Apply ${label} policy`} onClick={() => setThreshold(test.threshold)}>Apply</button></td>
+              </tr>)}</tbody>
+            </table></div>
+            <p>Costs use your displayed assumptions and the entire test-window capacity. Changing assumptions recomputes the cost policy on selection data; F1/F2 thresholds stay score-based. A lower threshold can catch more fraud while creating more false alerts.</p>
           </section>
 
           <section className="analytics-grid">
