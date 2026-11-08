@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import ModelUpgrade from "./model-upgrade";
 import {
   Area,
   AreaChart,
@@ -257,10 +258,11 @@ export default function FraudLensDashboard() {
 
         <nav aria-label="Primary navigation">
           <p>Workspace</p>
-          <a className="active" href="#strategy"><LayoutDashboard size={18} />Strategy simulator</a>
+          <a className="active" href="#model-upgrade"><BrainCircuit size={18} />Model upgrade</a>
+          <a href="#strategy"><LayoutDashboard size={18} />Legacy policy sandbox</a>
           <a href="#transactions"><TableProperties size={18} />Transactions</a>
           <Link href="/investigations/"><ShieldCheck size={18} />Case investigations</Link>
-          <a href="#models"><BrainCircuit size={18} />Model comparison</a>
+          <a href="#models"><BrainCircuit size={18} />Original model study</a>
           <a href="#attacks"><FlaskConical size={18} />Attack pattern lab</a>
           <p>System</p>
           <a href="#data"><Activity size={18} />Data provenance</a>
@@ -268,25 +270,27 @@ export default function FraudLensDashboard() {
         </nav>
 
         <div className="sidebar-foot">
-          <div className="dataset-chip"><span /><div><strong>Synthetic test window</strong><small>{integer.format(TOTAL_TRANSACTIONS)} scored transactions</small></div></div>
+          <div className="dataset-chip"><span /><div><strong>Synthetic portfolio studies</strong><small>Saved reports · no live inference</small></div></div>
           <div className="user-chip"><div className="avatar">PD</div><div><strong>Portfolio workspace</strong><small>Analyst view</small></div><ChevronDown size={15} /></div>
         </div>
       </aside>
 
-      <main id="strategy" className="main-content">
+      <main id="workspace" className="main-content">
         <header className="topbar">
-          <div className="breadcrumbs"><span>FraudLens</span><ArrowRight size={13} /><strong>Strategy simulator</strong></div>
+          <div className="breadcrumbs"><span>FraudLens</span><ArrowRight size={13} /><strong>Model evaluation</strong></div>
           <div className="topbar-actions">
-              <div className="model-pill"><span>Precomputed study</span><strong>Calibrated XGBoost</strong></div>
+              <div className="model-pill"><span>Saved synthetic evidence</span><strong>Calibrated XGBoost</strong></div>
           </div>
         </header>
 
         <div className="content-wrap">
-          <section className="page-intro">
+          <ModelUpgrade />
+
+          <section className="page-intro legacy-intro" id="strategy" aria-label="Original study legacy policy sandbox">
             <div>
-              <div className="eyebrow"><span className="live-dot" />Strategy Command Center</div>
-              <h1>Balance fraud loss<br />against customer trust.</h1>
-              <p>Explore real predictions from a trained model on {integer.format(TOTAL_TRANSACTIONS)} held-out synthetic transactions. The policy threshold is chosen on a separate selection window. Test exploration does not retune or validate a new policy.</p>
+              <div className="eyebrow">Original study · legacy policy sandbox</div>
+              <h2>Balance fraud loss<br />against customer trust.</h2>
+              <p>These controls retain the original model’s {integer.format(TOTAL_TRANSACTIONS)} previously exposed synthetic test transactions. The default 17-of-128 cost-focused result belongs to this original study, not the upgraded ranking model. Slider changes explore legacy test sensitivity and do not retune or validate a new policy.</p>
             </div>
             <div className="intro-actions">
               <button className="secondary-button" onClick={() => setShowAssumptions((value) => !value)}><Settings2 size={17} />Cost assumptions</button>
@@ -297,7 +301,7 @@ export default function FraudLensDashboard() {
           <section className="strategy-banner" aria-live="polite">
             <div className="strategy-banner-icon"><Gauge size={22} /></div>
             <div>
-              <span>Current decision rule</span>
+              <span>Legacy sandbox decision rule</span>
               <strong>Flag transactions at or above {(threshold * 100).toFixed(0)}% fraud probability</strong>
             </div>
             <div className="banner-divider" />
@@ -453,7 +457,7 @@ export default function FraudLensDashboard() {
 
           <section id="models" className="product-section">
             <div className="section-heading-row">
-              <div><span className="section-kicker">Validate</span><h2>Model comparison</h2><p>Fixed study: 45,000 train → 11,250 calibration → 7,500 policy selection → 11,250 test. Each model uses its own selection-cost threshold.</p></div>
+              <div><span className="section-kicker">Original exposed study</span><h2>Original model comparison</h2><p>Legacy study: 45,000 train → 11,250 calibration → 7,500 policy selection → 11,250 test. Each model uses its own selection-cost threshold. The fresh incumbent/challenger comparison appears above.</p></div>
               <div className="validation-chip"><CheckCircle2 size={15} /><div><strong>Four disjoint windows</strong><small>Test never selects policy</small></div></div>
             </div>
             <div className="model-grid">
@@ -514,7 +518,7 @@ export default function FraudLensDashboard() {
             <div className="provenance-metrics"><div><strong>{integer.format(TOTAL_TRANSACTIONS)}</strong><span>test-window rows</span></div><div><strong>{(FRAUD_TRANSACTIONS / TOTAL_TRANSACTIONS * 100).toFixed(2)}%</strong><span>test fraud prevalence</span></div><div><strong>4</strong><span>disjoint windows</span></div></div>
           </section>
 
-          <footer><div className="brand footer-brand"><div className="brand-mark"><ShieldCheck size={18} /></div><div><strong>FraudLens</strong><span>Explainable fraud strategy intelligence</span></div></div><p>Portfolio project by Poojan Desai. Precomputed test evidence; authored transaction and attack examples.</p><a href="#strategy">Back to simulator <ArrowUpRight size={13} /></a></footer>
+          <footer><div className="brand footer-brand"><div className="brand-mark"><ShieldCheck size={18} /></div><div><strong>FraudLens</strong><span>Explainable fraud strategy intelligence</span></div></div><p>Portfolio project by Poojan Desai. Saved synthetic evaluations; authored transaction and attack examples.</p><a href="#model-upgrade">Back to model evaluation <ArrowUpRight size={13} /></a></footer>
         </div>
       </main>
 

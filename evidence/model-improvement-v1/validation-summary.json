@@ -1,0 +1,40 @@
+{
+  "backend_tests": 94,
+  "frontend_unit_tests": 17,
+  "browser_checks": 163,
+  "browser_widths": [
+    320,
+    390,
+    768,
+    1440
+  ],
+  "static_checks": [
+    "ESLint",
+    "TypeScript",
+    "Next.js static build"
+  ],
+  "full_local_verification": {
+    "rows": 150000,
+    "paired_bootstrap_replicates": 500,
+    "model_files_hashed": 2,
+    "model_files_loaded_by_verifier": false
+  },
+  "committed_evidence_only_verification": {
+    "rows": 150000,
+    "paired_bootstrap_replicates": 500,
+    "model_files_verified": false
+  },
+  "local_scoring_cli": {
+    "rows": 1000,
+    "capacity": 20,
+    "alerts": 20,
+    "input_labels_present": false
+  },
+  "limits": [
+    "Same known synthetic process; no real-payment/future-time claim",
+    "One fit and one final replication; approximate conditional percentile CI",
+    "Cost-selected challenger policy regressed; incumbent sandbox retained",
+    "No hosted training, scoring or case service",
+    "One preexisting dependency deprecation warning remains"
+  ]
+}

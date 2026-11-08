@@ -1,7 +1,8 @@
 # FraudLens
 
-A fraud investigation and model-evaluation portfolio project using **75,000
-synthetic transactions**. Python/FastAPI and scikit-learn/XGBoost provide a
+A fraud investigation and model-evaluation portfolio project with a frozen
+**150,000-row independent synthetic model comparison** and the original
+**75,000-transaction policy study**. Python/FastAPI and scikit-learn/XGBoost provide a
 reproducible study and local case API; React/Next.js provides an analytical
 dashboard and an analyst review workflow.
 
@@ -14,6 +15,26 @@ API and configured credentials; this repository does not provide a live inferenc
 or production banking service. Build provenance at
 [`release.json`](https://fraudlens-poojan-desai.netlify.app/release.json) identifies
 the deployed source commit and synthetic study.
+
+## Actual model improvement — November 8, 2026
+
+The new development-selected model improved average precision from **0.24873 to
+0.27263 (+9.61% relative)** on 150,000 fresh synthetic transactions. At exactly
+3,000 alerts for both models, it caught **650/1,545 fraud cases versus 604/1,545**,
+with 46 fewer false alerts. The paired 95% bootstrap AP-difference interval was
+[0.01495, 0.03318]. Candidate parameters and the protocol were pushed in a frozen
+source checkpoint before generation of this independent draw.
+
+This is an actual model change, separate from the cost/F1/F2 threshold controls.
+Its cost-selected policy **did not improve**: modeled cost rose from $81,248.93 to
+$84,405.00. The dashboard shows that regression beside the ranking gain and keeps
+the original study separate. The same known stationary generator remains a major
+limit; this is not real-payment or future-time validation.
+
+[Full model-improvement study](docs/MODEL_IMPROVEMENT_2026-11-08.md) ·
+[Saved independent comparison](public/model-comparison.json) ·
+[Auditable predictions and plan](evidence/model-improvement-v1/README.md) ·
+[Development search](evidence/model-development-2026-11-08/README.md)
 
 ## What it demonstrates
 
@@ -69,7 +90,7 @@ Do not publish the generated credentials or runtime database.
 
 ## Verified evidence
 
-The [November release review](docs/VERIFICATION-2026-11-02.md) adds verified
+The original [November release review](docs/VERIFICATION-2026-11-02.md) adds verified
 training-CLI and aggregate-range fixes, dependency remediation, and **72 passing
 backend tests**. The original study is unchanged.
 

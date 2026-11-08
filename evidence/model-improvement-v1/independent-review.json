@@ -1,0 +1,265 @@
+{
+  "audit_date": "2026-11-08",
+  "status": "core_metrics_and_bindings_verified",
+  "plan_id": "d8cc5fece5e3319e",
+  "source_checkpoint": "27d273278d98fd92252f2eca130d30df780c1c5b",
+  "checkpoint_run_url": "https://github.com/Poojan-Desai/FraudLens/actions/runs/42531605233",
+  "checkpoint_run_conclusion": "success",
+  "timeline_utc": {
+    "frozen_at": "2026-11-08T22:42:54.918002+00:00",
+    "checkpoint_commit": "2026-11-08T22:42:55+00:00",
+    "checkpoint_server_push_run_created": "2026-11-08T22:42:58+00:00",
+    "evaluation_started": "2026-11-08T22:43:17.645874+00:00",
+    "evaluation_completed": "2026-11-08T22:43:58.477141+00:00"
+  },
+  "timeline_america_new_york": {
+    "frozen_at": "2026-11-08T17:42:54.918002-05:00",
+    "checkpoint_commit": "2026-11-08T17:42:55-05:00",
+    "checkpoint_server_push_run_created": "2026-11-08T17:42:58-05:00",
+    "evaluation_started": "2026-11-08T17:43:17.645874-05:00",
+    "evaluation_completed": "2026-11-08T17:43:58.477141-05:00"
+  },
+  "rows": 150000,
+  "positive_labels": 1545,
+  "fraud_prevalence": 0.0103,
+  "features": [
+    "amount",
+    "merchant_category",
+    "country",
+    "distance_from_home",
+    "transactions_last_hour",
+    "average_amount_30d",
+    "amount_to_customer_average",
+    "new_device",
+    "card_present",
+    "account_age_days",
+    "is_international",
+    "previous_declines"
+  ],
+  "feature_count": 12,
+  "source_checks": {
+    "backend/app/ml/model_comparison.py": {
+      "sha256": "46481496599ff5e938d9c69a8a6658e3967642299c713ecf6901a06e093982ed",
+      "matches_checkpoint_and_current": true
+    },
+    "backend/app/ml/synthetic.py": {
+      "sha256": "69b8816f72592bfe4799a6c196cdfa6c4ddb0fcbfd792a0a615363730a92a068",
+      "matches_checkpoint_and_current": true
+    },
+    "backend/app/ml/train.py": {
+      "sha256": "97b6f60c2c43379fb87091f2c58ebeabe4ef1912cd9f4e19f932e87234bfcced",
+      "matches_checkpoint_and_current": true
+    },
+    "backend/app/ml/experiment.py": {
+      "sha256": "3dc1fe0487d595c20c27df80755c0eb745887e8886ae0bfc9cdb11adb47cef01",
+      "matches_checkpoint_and_current": true
+    },
+    "backend/app/ml/validation.py": {
+      "sha256": "c9f6f508a69529282215a00e3de3defc1d1663cc0a3d906b34c0d19213320b04",
+      "matches_checkpoint_and_current": true
+    },
+    "backend/app/schemas.py": {
+      "sha256": "0a29cb2eba33efe0fc675a3e6360f518ecccb39da86bcdfb785f002d1a13deba",
+      "matches_checkpoint_and_current": true
+    },
+    "backend/app/services/money.py": {
+      "sha256": "3d3c4f987abe57ab43978fd9e5f6191334ca0904326bebe6d0f32c2c68b19f9d",
+      "matches_checkpoint_and_current": true
+    }
+  },
+  "development_manifest_file_count": 10,
+  "development_configuration_count": 12,
+  "development_fit_count": 36,
+  "development_seeds": [
+    11,
+    29,
+    73
+  ],
+  "development_unique_winner": "unit_d2_300_regularized",
+  "development_winner_mean_selection_ap": 0.3473163793329177,
+  "development_runner_up_mean_selection_ap": 0.33134669418324453,
+  "public_full_report_equal": true,
+  "frozen_plan_sha256": "46b27ec0230290f7b18318904e86957a2ac4018fee94a5c82e10f4420400b012",
+  "prediction_gzip_sha256": "c09d12b497d766e3a949a9ad3248f2fe79c7a2b29484b72395bc126cb38d0873",
+  "prediction_gzip_bytes": 3667607,
+  "models": {
+    "incumbent": {
+      "average_precision": 0.24872599148209787,
+      "brier_score": 0.009267995564769394,
+      "roc_auc": 0.8567680747077857,
+      "budgets": {
+        "0.005": {
+          "alerts": 750,
+          "true_positives": 377,
+          "false_positives": 373,
+          "false_negatives": 1168,
+          "true_negatives": 148082,
+          "precision": 0.5026666666666667,
+          "recall": 0.24401294498381876,
+          "cutoff_score": 0.16430769354311858,
+          "boundary_tie_group_size": 1,
+          "selected_boundary_ties": 1
+        },
+        "0.01": {
+          "alerts": 1500,
+          "true_positives": 492,
+          "false_positives": 1008,
+          "false_negatives": 1053,
+          "true_negatives": 147447,
+          "precision": 0.328,
+          "recall": 0.31844660194174756,
+          "cutoff_score": 0.1295242092116625,
+          "boundary_tie_group_size": 1,
+          "selected_boundary_ties": 1
+        },
+        "0.02": {
+          "alerts": 3000,
+          "true_positives": 604,
+          "false_positives": 2396,
+          "false_negatives": 941,
+          "true_negatives": 146059,
+          "precision": 0.20133333333333334,
+          "recall": 0.39093851132686086,
+          "cutoff_score": 0.09695585465359818,
+          "boundary_tie_group_size": 1,
+          "selected_boundary_ties": 1
+        },
+        "0.05": {
+          "alerts": 7500,
+          "true_positives": 816,
+          "false_positives": 6684,
+          "false_negatives": 729,
+          "true_negatives": 141771,
+          "precision": 0.1088,
+          "recall": 0.5281553398058253,
+          "cutoff_score": 0.05272864735133746,
+          "boundary_tie_group_size": 1,
+          "selected_boundary_ties": 1
+        }
+      },
+      "selection_cost_policy": {
+        "threshold": 0.18,
+        "alerts": 529,
+        "true_positives": 298,
+        "false_positives": 231,
+        "recall": 0.1928802588996764,
+        "precision": 0.5633270321361059,
+        "total_cost": 81248.93
+      },
+      "model_artifact_sha256": "aa83ab60c677dfca4a59652f1e84076abcf3be6cbab2172a858b681d8d8cb429"
+    },
+    "challenger": {
+      "average_precision": 0.2726320394164549,
+      "brier_score": 0.008789485727662086,
+      "roc_auc": 0.8694353742141687,
+      "budgets": {
+        "0.005": {
+          "alerts": 750,
+          "true_positives": 399,
+          "false_positives": 351,
+          "false_negatives": 1146,
+          "true_negatives": 148104,
+          "precision": 0.532,
+          "recall": 0.258252427184466,
+          "cutoff_score": 0.10475877863134926,
+          "boundary_tie_group_size": 1,
+          "selected_boundary_ties": 1
+        },
+        "0.01": {
+          "alerts": 1500,
+          "true_positives": 519,
+          "false_positives": 981,
+          "false_negatives": 1026,
+          "true_negatives": 147474,
+          "precision": 0.346,
+          "recall": 0.3359223300970874,
+          "cutoff_score": 0.024682339810506847,
+          "boundary_tie_group_size": 1,
+          "selected_boundary_ties": 1
+        },
+        "0.02": {
+          "alerts": 3000,
+          "true_positives": 650,
+          "false_positives": 2350,
+          "false_negatives": 895,
+          "true_negatives": 146105,
+          "precision": 0.21666666666666667,
+          "recall": 0.42071197411003236,
+          "cutoff_score": 0.014416442568581381,
+          "boundary_tie_group_size": 1,
+          "selected_boundary_ties": 1
+        },
+        "0.05": {
+          "alerts": 7500,
+          "true_positives": 836,
+          "false_positives": 6664,
+          "false_negatives": 709,
+          "true_negatives": 141791,
+          "precision": 0.11146666666666667,
+          "recall": 0.5411003236245955,
+          "cutoff_score": 0.010031925001924125,
+          "boundary_tie_group_size": 1,
+          "selected_boundary_ties": 1
+        }
+      },
+      "selection_cost_policy": {
+        "threshold": 0.66,
+        "alerts": 236,
+        "true_positives": 163,
+        "false_positives": 73,
+        "recall": 0.10550161812297734,
+        "precision": 0.690677966101695,
+        "total_cost": 84405.0
+      },
+      "model_artifact_sha256": "7252e9b3140b9a0c94364bb1ea6558ff0db26c18c3c11c541fd32057ad27279a"
+    }
+  },
+  "deltas": {
+    "average_precision": 0.02390604793435705,
+    "average_precision_percentage_points": 2.390604793435705,
+    "average_precision_relative_percent": 9.611399191498538,
+    "top2_true_positives": 46,
+    "top2_recall_percentage_points": 2.97734627831715,
+    "top2_precision_percentage_points": 1.5333333333333337,
+    "selection_cost_dollars": 3156.07,
+    "selection_cost_relative_percent": 3.8844450013064913,
+    "selection_cost_policy_true_positive_delta": -135
+  },
+  "reported_intervals": {
+    "method": "paired ordinary row bootstrap; percentile 95%, numpy linear quantiles; original-ID score ties; sklearn grouped-tie AP",
+    "requested_replicates": 500,
+    "valid_replicates": 500,
+    "seed": 90210,
+    "average_precision_delta_95": {
+      "lower": 0.014946943227530709,
+      "upper": 0.033180460812189
+    },
+    "primary_budget_recall_delta_95": {
+      "lower": 0.016082022406687154,
+      "upper": 0.039532788998071756
+    }
+  },
+  "intervals_independently_recomputed": false,
+  "interval_review": "500-replicate paired CI implementation reviewed previously; primary agent separately recomputing. This audit independently recomputes AP/top-k/cost point metrics only.",
+  "recorded_gate_pass": true,
+  "cost_policy_promoted": false,
+  "claim_limitations": [
+    "Same known stationary generator, not real or future-time data.",
+    "AP/top-k improvement is a synthetic ranking result; old cost-threshold policy is worse and should not be promoted.",
+    "Unsigned/local timestamps do not prove no earlier data access; server checkpoint corroborates published freeze before recorded evaluation start.",
+    "Hash checks verify byte consistency, not authentication or that predictions were emitted by hashed models.",
+    "No models loaded or fitted and no data regenerated in this independent audit."
+  ],
+  "audit_runtime": {
+    "python": "3.13.1",
+    "packages": {
+      "numpy": "2.3.2",
+      "pandas": "2.2.3",
+      "scipy": "1.18.1",
+      "scikit-learn": "1.7.1",
+      "xgboost": "3.0.3",
+      "joblib": "1.5.1"
+    }
+  },
+  "audit_runtime_matches_frozen_versions": true
+}

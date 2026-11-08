@@ -16,6 +16,8 @@ jobs:
       - run: PYTHONPATH=. python -m pytest -q backend/tests
       - run: PYTHONPATH=. python scripts/run_experiment.py --output artifacts/ci
       - run: PYTHONPATH=. python scripts/verify_experiment.py artifacts/ci/*
+      - name: Recompute frozen model-comparison evidence without loading model bundles
+        run: PYTHONPATH=. python scripts/compare_models.py verify evidence/model-improvement-v1 --evidence-only
       - uses: actions/upload-artifact@v4
         with:
           name: synthetic-evaluation
