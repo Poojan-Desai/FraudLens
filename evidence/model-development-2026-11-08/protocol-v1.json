@@ -1,0 +1,254 @@
+{
+  "schema": "fraudlens-development-screen/v1",
+  "registered_at_utc": "2026-11-08T22:33:30.577752+00:00",
+  "generated_rows_per_seed": 75000,
+  "development_seeds": [
+    11,
+    29,
+    73
+  ],
+  "used_rows": {
+    "train": 45000,
+    "calibration": 11250,
+    "selection": 7500
+  },
+  "boundary_indices": [
+    0,
+    45000,
+    56250,
+    63750
+  ],
+  "unused_rows": "Rows 63750:75000 are discarded without inspection, prediction, evaluation or selection use.",
+  "features": [
+    "amount",
+    "merchant_category",
+    "country",
+    "distance_from_home",
+    "transactions_last_hour",
+    "average_amount_30d",
+    "amount_to_customer_average",
+    "new_device",
+    "card_present",
+    "account_age_days",
+    "is_international",
+    "previous_declines"
+  ],
+  "feature_changes": "None; no target, timestamp, metadata or derived-rule features.",
+  "preprocessing": "Unchanged repository _preprocessor, fitted on training rows only for each candidate.",
+  "calibration": "Unchanged sigmoid CalibratedClassifierCV(FrozenEstimator(pipeline)), fitted on calibration rows only.",
+  "estimator_random_state": "Equal to that development seed, as in the existing baseline.",
+  "ranking": [
+    "mean selection average_precision_score across the three seeds",
+    "mean selection recall at a fixed top-2-percent budget (150 of 7500), as secondary tie break",
+    "candidate ID, ascending, for exact ties"
+  ],
+  "candidate_grid": [
+    {
+      "id": "baseline_existing",
+      "weight_rule": "negative_positive_ratio",
+      "parameters": {
+        "learning_rate": 0.05,
+        "subsample": 0.85,
+        "colsample_bytree": 0.85,
+        "objective": "binary:logistic",
+        "eval_metric": "aucpr",
+        "n_jobs": 1,
+        "max_depth": 3,
+        "n_estimators": 300
+      }
+    },
+    {
+      "id": "unit_d3_300_default",
+      "weight_rule": "one",
+      "parameters": {
+        "learning_rate": 0.05,
+        "subsample": 0.85,
+        "colsample_bytree": 0.85,
+        "objective": "binary:logistic",
+        "eval_metric": "aucpr",
+        "n_jobs": 1,
+        "max_depth": 3,
+        "n_estimators": 300
+      }
+    },
+    {
+      "id": "sqrt_d3_300_default",
+      "weight_rule": "sqrt_negative_positive_ratio",
+      "parameters": {
+        "learning_rate": 0.05,
+        "subsample": 0.85,
+        "colsample_bytree": 0.85,
+        "objective": "binary:logistic",
+        "eval_metric": "aucpr",
+        "n_jobs": 1,
+        "max_depth": 3,
+        "n_estimators": 300
+      }
+    },
+    {
+      "id": "unit_d2_300_regularized",
+      "weight_rule": "one",
+      "parameters": {
+        "learning_rate": 0.05,
+        "subsample": 0.85,
+        "colsample_bytree": 0.85,
+        "objective": "binary:logistic",
+        "eval_metric": "aucpr",
+        "n_jobs": 1,
+        "max_depth": 2,
+        "n_estimators": 300,
+        "min_child_weight": 5,
+        "reg_lambda": 5
+      }
+    },
+    {
+      "id": "unit_d2_600_regularized",
+      "weight_rule": "one",
+      "parameters": {
+        "learning_rate": 0.05,
+        "subsample": 0.85,
+        "colsample_bytree": 0.85,
+        "objective": "binary:logistic",
+        "eval_metric": "aucpr",
+        "n_jobs": 1,
+        "max_depth": 2,
+        "n_estimators": 600,
+        "min_child_weight": 5,
+        "reg_lambda": 5
+      }
+    },
+    {
+      "id": "unit_d3_300_regularized",
+      "weight_rule": "one",
+      "parameters": {
+        "learning_rate": 0.05,
+        "subsample": 0.85,
+        "colsample_bytree": 0.85,
+        "objective": "binary:logistic",
+        "eval_metric": "aucpr",
+        "n_jobs": 1,
+        "max_depth": 3,
+        "n_estimators": 300,
+        "min_child_weight": 5,
+        "reg_lambda": 5
+      }
+    },
+    {
+      "id": "unit_d3_600_regularized",
+      "weight_rule": "one",
+      "parameters": {
+        "learning_rate": 0.05,
+        "subsample": 0.85,
+        "colsample_bytree": 0.85,
+        "objective": "binary:logistic",
+        "eval_metric": "aucpr",
+        "n_jobs": 1,
+        "max_depth": 3,
+        "n_estimators": 600,
+        "min_child_weight": 5,
+        "reg_lambda": 5
+      }
+    },
+    {
+      "id": "unit_d4_300_regularized",
+      "weight_rule": "one",
+      "parameters": {
+        "learning_rate": 0.05,
+        "subsample": 0.85,
+        "colsample_bytree": 0.85,
+        "objective": "binary:logistic",
+        "eval_metric": "aucpr",
+        "n_jobs": 1,
+        "max_depth": 4,
+        "n_estimators": 300,
+        "min_child_weight": 5,
+        "reg_lambda": 5
+      }
+    },
+    {
+      "id": "unit_d4_600_regularized",
+      "weight_rule": "one",
+      "parameters": {
+        "learning_rate": 0.05,
+        "subsample": 0.85,
+        "colsample_bytree": 0.85,
+        "objective": "binary:logistic",
+        "eval_metric": "aucpr",
+        "n_jobs": 1,
+        "max_depth": 4,
+        "n_estimators": 600,
+        "min_child_weight": 5,
+        "reg_lambda": 5
+      }
+    },
+    {
+      "id": "sqrt_d2_600_regularized",
+      "weight_rule": "sqrt_negative_positive_ratio",
+      "parameters": {
+        "learning_rate": 0.05,
+        "subsample": 0.85,
+        "colsample_bytree": 0.85,
+        "objective": "binary:logistic",
+        "eval_metric": "aucpr",
+        "n_jobs": 1,
+        "max_depth": 2,
+        "n_estimators": 600,
+        "min_child_weight": 5,
+        "reg_lambda": 5
+      }
+    },
+    {
+      "id": "sqrt_d3_600_regularized",
+      "weight_rule": "sqrt_negative_positive_ratio",
+      "parameters": {
+        "learning_rate": 0.05,
+        "subsample": 0.85,
+        "colsample_bytree": 0.85,
+        "objective": "binary:logistic",
+        "eval_metric": "aucpr",
+        "n_jobs": 1,
+        "max_depth": 3,
+        "n_estimators": 600,
+        "min_child_weight": 5,
+        "reg_lambda": 5
+      }
+    },
+    {
+      "id": "sqrt_d4_600_regularized",
+      "weight_rule": "sqrt_negative_positive_ratio",
+      "parameters": {
+        "learning_rate": 0.05,
+        "subsample": 0.85,
+        "colsample_bytree": 0.85,
+        "objective": "binary:logistic",
+        "eval_metric": "aucpr",
+        "n_jobs": 1,
+        "max_depth": 4,
+        "n_estimators": 600,
+        "min_child_weight": 5,
+        "reg_lambda": 5
+      }
+    }
+  ],
+  "provenance": {
+    "python": "3.13.1",
+    "platform": "macOS-14.4-arm64-arm-64bit-Mach-O",
+    "packages": {
+      "numpy": "2.3.2",
+      "pandas": "2.2.3",
+      "scipy": "1.18.1",
+      "scikit-learn": "1.7.1",
+      "xgboost": "3.0.3",
+      "joblib": "1.5.1",
+      "threadpoolctl": "3.8.0"
+    },
+    "repository_head": "8664e8ccba912017ab539cf466b28d9d9d0eb44a",
+    "source_sha256": {
+      "backend/app/ml/experiment.py": "3dc1fe0487d595c20c27df80755c0eb745887e8886ae0bfc9cdb11adb47cef01",
+      "backend/app/ml/train.py": "97b6f60c2c43379fb87091f2c58ebeabe4ef1912cd9f4e19f932e87234bfcced",
+      "backend/app/ml/synthetic.py": "69b8816f72592bfe4799a6c196cdfa6c4ddb0fcbfd792a0a615363730a92a068"
+    },
+    "script_sha256": "44b494147a1fe8154992e3f8d9a385f2c23aa33f56e8ca53f53a2e941de0215e"
+  },
+  "scope": "Development model selection only; no final holdout generated or inspected. No real-payment claim."
+}
